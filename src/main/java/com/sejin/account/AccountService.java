@@ -68,6 +68,7 @@ public class AccountService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String emailOrNickname) throws UsernameNotFoundException {
+        // 데이터 베이스에 있는 정보를 통해서 인증을 하기 위해서 사용 USerDetailsService 인터페이스 구현
         Account account = accountRepository.findByEmail(emailOrNickname);
         if(account==null){
             account = accountRepository.findByNickname(emailOrNickname);
