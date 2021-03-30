@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.validation.Valid;
@@ -97,6 +98,24 @@ public class AccountController { // 계정 관련 컨트롤러
         return "account/checked-email";
 
         // 셋다 보면 리턴하는 뷰는 동일한데 보내는 데이터가 다르다.(model 의 내용이 다르다.)
+    }
+
+    @GetMapping("/profile/{nickname}")
+    public String viewProfile(@PathVariable String nickname, Model model, @CurrentUser Account account){
+        // nickname은 조회를 하려고 하는 사람을 알아내기 위한 것이고, account 는 현재 로그인 한 사람에 대한 정보다.
+        // 즉 현재 로그인 한 사람과 조회하려고 하는 프로필의 사람이 동일한 사람인지 알아내기 위함이다.
+        Account byNickname = accountRepository.findByNickname(nickname);
+        if(byNickname == null){
+            throw new IllegalArgumentException(nickname + "에 해당하는 사용자가 없습니다.");
+        }
+
+        model.addAttribute(byNickname);
+        // model.addAttribute("account",byNickname); 과 같은 결과가 된다.  뷰에 캐멀 케이스로 전달이 죔.
+        model.addAttribute("isOwner", byNickname.equals(account));
+        // 현재 사용자와 프로필이 같은 사람인지?!
+        // 다른 사람의 프로필을 열람 할 수도 있기 때문이다.
+        return "account/profile";
+
     }
 
 }
