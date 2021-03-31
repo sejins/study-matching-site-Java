@@ -90,7 +90,8 @@ public class AccountController { // 계정 관련 컨트롤러
             return "account/checked-email";
         } // 여기까지 통과하면 이메일도 존재하고, 토큰값도 일치. 즉, 인증이 된 사용자임.
 
-        account.completeSignUp();
+        accountService.completeSignUp(account);
+        //account.completeSignUp();   // 이 메서드는 account 객체의 내용을 변경시키기 때문에 트랜잭션 내부에서 수행이 되어야한다.
         accountService.login(account);
 
         model.addAttribute("numberOfUser",accountRepository.count());
