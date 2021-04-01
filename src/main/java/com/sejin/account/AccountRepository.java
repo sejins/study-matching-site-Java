@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 
-@Transactional(readOnly = true)
+@Transactional(readOnly = true) // JpaRepository는 알아서 트렌젝션 처리가 되지만,  AccountRepository 내부의 내가 만든 메서드에는 Transactional 처리를 해 줘야한다.
 public interface AccountRepository extends JpaRepository<Account, Long> {
     boolean existsByEmail(String email);
 

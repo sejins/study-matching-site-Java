@@ -44,7 +44,7 @@ public class AccountController { // 계정 관련 컨트롤러
 
     @PostMapping("/sign-up")
     public String signUpSubmit(@Valid SignUpForm signUpForm, Errors errors){ // @Valid 어노테이션을 통해서 SignUpForm 객체에 대해서 검증
-        // SignUpForm 폼 객체에서 검증을 통해서 바인딩 에러가 발생하게 되면, Errors 객체에 에러 정보가 들어간다.
+        // SignUpForm 폼 객체에서 검증을 통해서 바인딩 에러가 발생하게 되면, Errors 객체에 에러 정보가 들어간다. -> 세트로 기억해두자.
         if(errors.hasErrors()){
             return "account/sign-up";
         }

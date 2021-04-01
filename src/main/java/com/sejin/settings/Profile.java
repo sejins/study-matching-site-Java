@@ -2,8 +2,10 @@ package com.sejin.settings;
 
 import com.sejin.domain.Account;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Profile {
     // profile 수정 뷰에 넘겨줄 폼 클래스
 
