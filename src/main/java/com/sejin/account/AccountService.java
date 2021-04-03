@@ -91,6 +91,7 @@ public class AccountService implements UserDetailsService {
         account.setOccupation(profile.getOccupation());
         account.setLocation(profile.getLocation());
         account.setBio(profile.getBio());
+        account.setProfileImage(profile.getProfileImage()); // TODO 프로필 수정과 프로필 창에서는 변경된 프로필이 나올텐데, 네비게이션 바에도 반영이 되게 수정 해야함.
         // 여기까지만 해서 될 것 같지만, 문제가 존재한다.  Spring MVC적인 문제 , Spring JPA적인 문제.
         // 1. Spring MVC 문제는 컨트롤러 주석으로.
         // 2. Spring JPA 문제, 이대로 했으면 DB에 반영이 안된다.  -> AccountService 클래스에서 Transaction 처리를 해줬는데 왜?
