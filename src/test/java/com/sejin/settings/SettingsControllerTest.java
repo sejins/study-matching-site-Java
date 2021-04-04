@@ -3,12 +3,14 @@ package com.sejin.settings;
 import com.sejin.WithAccount;
 import com.sejin.account.AccountRepository;
 import com.sejin.domain.Account;
+import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +29,7 @@ class SettingsControllerTest {
 
     @Autowired AccountRepository accountRepository;
 
+    @Autowired PasswordEncoder passwordEncoder;
 
     @AfterEach
     void afterEach(){
@@ -82,5 +85,54 @@ class SettingsControllerTest {
         Account jjinse = accountRepository.findByNickname("jjinse");
         assertNull(jjinse.getBio());
         //Validation에서 걸리기 때문에 값이 들어가지 않게 된다.
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("패스워드 수정 폼")
+    @Test
+    void updatePassword_form() throws Exception{
+
+        mockMvc.perform(get("/settings/password"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("passwordForm"));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("패스워드 수정 - 입력값 정상")
+    @Test
+    void updatePassword_success() throws Exception{
+
+        mockMvc.perform(post("/settings/password")
+                .param("newPassword","12345678")
+                .param("newPasswordConfirm","12345678")
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/settings/password"))
+                .andExpect(flash().attributeExists("message"));
+
+        //실제로 바뀌었는지 확인도 해주기
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        assertTrue(passwordEncoder.matches("12345678",jjinse.getPassword()));
+        // assertEquals(passwordEncoder.encode("12345678"),jjinse.getPassword());   // 이거 왜 안되지..?!
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("패스워드 수정 - 입력값 오류")
+    @Test
+    void updatePassword_error() throws Exception{
+
+        mockMvc.perform(post("/settings/password")
+                .param("newPassword","12345678")
+                .param("newPasswordConfirm","11111111")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("settings/password"))
+                .andExpect(model().hasErrors())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("passwordForm"));
+
+
+
     }
 }

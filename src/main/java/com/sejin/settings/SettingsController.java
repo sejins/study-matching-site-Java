@@ -7,16 +7,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 
+
 @Controller
 @RequiredArgsConstructor
 public class SettingsController {
+
+    @InitBinder("passwordForm")
+    public void initBinder(WebDataBinder webDataBinder){
+        webDataBinder.addValidators(new PasswordFormValidator());
+    }
 
     private final AccountService accountService;
 
@@ -46,5 +54,32 @@ public class SettingsController {
         // 내 코드의 기존의 Profile 클래스의 생성자는 account를 인자로 받기 때문에, Spring MVC가 생성자를 호출하는 당시에 어디에서도 account 객체를 참조할 수 없어서 NullpointException이 발생하게 된다.
         // 그래서 Profile 클래스에 디폴트 생성자를 만들어 줘야 해결할 수 있다. -> 롬복 애너테이션을 사용하던지, 코드로 만들던지 알아서~
 
+    }
+
+    @GetMapping("/settings/password")
+    public String passwordUpdateForm(@CurrentUser Account account, Model model){
+        model.addAttribute(account);
+        model.addAttribute(new PasswordForm());
+        return "settings/password";
+    }
+
+    @PostMapping("/settings/password")
+    public String updatePassword(@CurrentUser Account account, @Valid @ModelAttribute PasswordForm passwordForm, Errors errors, Model model, RedirectAttributes attributes){
+        // @Valid를 통해서 패스워드가 8~50 자인지 검증하고, Validator를 통해서 패스워드와 확인 패스워드 값이 일치하는지 검증한다.
+        if(errors.hasErrors()){
+            model.addAttribute(account);
+            return "settings/password";
+        }
+
+        accountService.updatePassword(account,passwordForm.getNewPassword());
+        attributes.addFlashAttribute("message","패스워드를 변경했습니다.");
+        return "redirect:" + "/settings/password";
+    }
+
+    @GetMapping("/srttings/notifications")
+    public String updateNotificationForm(@CurrentUser Account account, Model model){
+        model.addAttribute(account);
+        model.addAttribute(new Notifications());
+        return "settings/notifications";
     }
 }

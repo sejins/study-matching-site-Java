@@ -100,4 +100,9 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account); // save를 통해서 해당 정보를 DB에 업로드를 시켜 줘야한다.
 
     }
+
+    public void updatePassword(Account account, String newPassword) {
+        account.setPassword(passwordEncoder.encode(newPassword)); // 다시 새로운 패스워드를 저장할때도 인코딩을 해줘야한다.
+        accountRepository.save(account);
+    }
 }
