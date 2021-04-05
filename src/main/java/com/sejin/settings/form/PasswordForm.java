@@ -1,4 +1,4 @@
-package com.sejin.settings;
+package com.sejin.settings.form;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;

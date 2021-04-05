@@ -1,4 +1,4 @@
-package com.sejin.settings;
+package com.sejin.settings.form;
 
 import com.sejin.domain.Account;
 import lombok.Data;

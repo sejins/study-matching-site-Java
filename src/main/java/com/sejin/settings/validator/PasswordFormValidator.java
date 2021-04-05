@@ -1,5 +1,6 @@
-package com.sejin.settings;
+package com.sejin.settings.validator;
 
+import com.sejin.settings.form.PasswordForm;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 

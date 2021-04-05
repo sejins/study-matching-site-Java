@@ -3,6 +3,11 @@ package com.sejin.settings;
 import com.sejin.account.AccountService;
 import com.sejin.account.CurrentUser;
 import com.sejin.domain.Account;
+import com.sejin.settings.form.NicknameForm;
+import com.sejin.settings.form.Notifications;
+import com.sejin.settings.form.PasswordForm;
+import com.sejin.settings.form.Profile;
+import com.sejin.settings.validator.PasswordFormValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -94,5 +99,25 @@ public class SettingsController {
         accountService.updateNotifications(account,notifications);
         attributes.addFlashAttribute("message","알림 설정을 변경 했습니다.");
         return "redirect:"+"/settings/notifications";
+    }
+
+    @GetMapping("/settings/account")
+    public String updateAccountForm(@CurrentUser Account account, Model model){
+        model.addAttribute(account);
+        model.addAttribute(new NicknameForm(account));
+        return "settings/account";
+    }
+
+    @PostMapping("/settings/account")
+    public String updateAccount(@CurrentUser Account account, @Valid @ModelAttribute NicknameForm nicknameForm, Errors errors,
+                                Model model, RedirectAttributes attributes){
+        if(errors.hasErrors()){
+            model.addAttribute(account);
+            return "settings/account";
+        }
+
+        accountService.updateNickname(account,nicknameForm.getNickname());
+        attributes.addFlashAttribute("message","닉네임을 수정했습니다.");
+        return "redirect:"+"/settings/account";
     }
 }

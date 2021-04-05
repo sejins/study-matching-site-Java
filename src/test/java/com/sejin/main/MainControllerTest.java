@@ -1,7 +1,9 @@
 package com.sejin.main;
 
+import com.sejin.account.AccountRepository;
 import com.sejin.account.AccountService;
 import com.sejin.account.SignUpForm;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,12 @@ class MainControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired AccountService accountService;
+    @Autowired AccountRepository accountRepository;
 
+    @AfterEach
+    void afterEach(){
+        accountRepository.deleteAll();
+    }
 
     @DisplayName("이메일로 로그인 성공")
     @Test
