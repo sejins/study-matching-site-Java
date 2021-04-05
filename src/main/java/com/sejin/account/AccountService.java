@@ -1,6 +1,7 @@
 package com.sejin.account;
 
 import com.sejin.domain.Account;
+import com.sejin.settings.Notifications;
 import com.sejin.settings.Profile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
@@ -103,6 +104,16 @@ public class AccountService implements UserDetailsService {
 
     public void updatePassword(Account account, String newPassword) {
         account.setPassword(passwordEncoder.encode(newPassword)); // 다시 새로운 패스워드를 저장할때도 인코딩을 해줘야한다.
+        accountRepository.save(account);
+    }
+
+    public void updateNotifications(Account account, Notifications notifications) {
+        account.setStudyCreatedByEmail(notifications.isStudyCreatedByEmail());
+        account.setStudyCreatedByWeb(notifications.isStudyCreatedByWeb());
+        account.setStudyEnrollmentByEmail(notifications.isStudyEnrollmentByEmail());
+        account.setStudyEnrollmentByWeb(notifications.isStudyEnrollmentByWeb());
+        account.setStudyUpdatedByEmail(notifications.isStudyUpdatedByEmail());
+        account.setStudyUpdatedByWeb(notifications.isStudyUpdatedByWeb());
         accountRepository.save(account);
     }
 }

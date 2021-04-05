@@ -131,8 +131,58 @@ class SettingsControllerTest {
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("passwordForm"));
+    }
 
+    @WithAccount("jjinse")
+    @DisplayName("알림 설정 폼")
+    @Test
+    void updateNotifications_form() throws Exception{
 
+        mockMvc.perform(get("/settings/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("notifications"));
+    }
 
+    @WithAccount("jjinse")
+    @DisplayName("알림 설정")
+    @Test
+    void updateNotifications_success() throws Exception{
+
+        mockMvc.perform(post("/settings/notifications")
+                .param("studyCreatedByEmail","true")
+                .param("studyCreatedByWeb","true")
+                .param("studyEnrollmentByEmail","true")
+                .param("studyEnrollmentByWeb","true")
+                .param("studyUpdatedByEmail","true")
+                .param("studyUpdatedByWeb","true")
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/settings/notifications"))
+                .andExpect(flash().attributeExists("message"));
+
+        // 제대로 값들이 저장이 됐는지 검사
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        assertTrue(jjinse.isStudyCreatedByEmail());
+        assertTrue(jjinse.isStudyCreatedByWeb());
+        assertTrue(jjinse.isStudyEnrollmentByEmail());
+        assertTrue(jjinse.isStudyCreatedByWeb());
+        assertTrue(jjinse.isStudyUpdatedByEmail());
+        assertTrue(jjinse.isStudyCreatedByWeb());
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("알림 설정 - 오류값 전송")
+    @Test
+    void updateNotifications_error() throws Exception{
+
+        mockMvc.perform(post("/settings/notifications")
+                .param("studyCreatedByEmail","hellohihihi")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("settings/notifications"))
+                .andExpect(model().hasErrors())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("notifications"));
     }
 }

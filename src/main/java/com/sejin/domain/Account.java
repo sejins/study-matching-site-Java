@@ -45,15 +45,15 @@ public class Account { // 계정 도메인
 
     private boolean studyCreatedByEmail;
 
-    private boolean studyCreatedByWeb;
+    private boolean studyCreatedByWeb = true;
 
     private boolean studyEnrollmentByEmail;
 
-    private boolean studyEnrollmentByWeb;
+    private boolean studyEnrollmentByWeb = true;
 
     private boolean studyUpdatedByEmail;
 
-    private boolean studyUpdatedByWeb;
+    private boolean studyUpdatedByWeb = true;
 
     public void generateEmailCheckToken() {
         this.emailCheckToken = UUID.randomUUID().toString();

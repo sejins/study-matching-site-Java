@@ -76,10 +76,23 @@ public class SettingsController {
         return "redirect:" + "/settings/password";
     }
 
-    @GetMapping("/srttings/notifications")
+    @GetMapping("/settings/notifications")
     public String updateNotificationForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
-        model.addAttribute(new Notifications());
+        model.addAttribute(new Notifications(account));
         return "settings/notifications";
+    }
+
+    @PostMapping("/settings/notifications")
+    public String updateNotifications(@CurrentUser Account account,@Valid @ModelAttribute Notifications notifications, Errors errors,
+                                      Model model, RedirectAttributes attributes){
+        if(errors.hasErrors()){
+            model.addAttribute(account);
+            return "settings/notifications";
+        }
+
+        accountService.updateNotifications(account,notifications);
+        attributes.addFlashAttribute("message","알림 설정을 변경 했습니다.");
+        return "redirect:"+"/settings/notifications";
     }
 }
