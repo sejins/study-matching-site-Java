@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .mvcMatchers("/","/login","/sign-up","/check-email-token",
-                        "/email-login","/check-email-login","/login-link").permitAll()
+                        "/email-login","/check-email-login","/login-link","/login-by-email").permitAll()
                 .mvcMatchers(HttpMethod.GET, "/profile/*").permitAll()
                 .anyRequest().authenticated();
         // 인증을 허가할 요청을 결정하고, 특정 요청 메서드에 대해서만 허가를 할 수도 있고,

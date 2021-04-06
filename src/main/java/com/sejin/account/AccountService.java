@@ -131,4 +131,14 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
         login(account);
     }
+
+    public void sendLoginLink(Account account) {
+        // account에 대한 영속성 컨텍스트가 존재하고, account는 persistent한 객체가 된다.
+        account.generateEmailCheckToken(); // 트랜잭션 내부에 있기 때문에, DB에 변경사항이 반영된다.
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(account.getEmail());
+        mailMessage.setSubject("진스터디, 로그인 링크");
+        mailMessage.setText("/login-by-email?token="+account.getEmailCheckToken()+"&email="+account.getEmail());
+        javaMailSender.send(mailMessage);
+    }
 }
