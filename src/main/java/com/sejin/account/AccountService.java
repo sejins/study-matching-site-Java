@@ -1,6 +1,7 @@
 package com.sejin.account;
 
 import com.sejin.domain.Account;
+import com.sejin.domain.Tag;
 import com.sejin.settings.form.Notifications;
 import com.sejin.settings.form.Profile;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -140,5 +142,18 @@ public class AccountService implements UserDetailsService {
         mailMessage.setSubject("진스터디, 로그인 링크");
         mailMessage.setText("/login-by-email?token="+account.getEmailCheckToken()+"&email="+account.getEmail());
         javaMailSender.send(mailMessage);
+    }
+
+    public void addTag(Account account, Tag tag) {
+
+        // detached한 account의 객체에 대해서는 @ManyToMany로 지정해놓은 부분이 인식이 안되어서 null이기 때문에 사용하면 nullPointException이 발생할 것이다.
+        // 영속성 컨텍스트가 관리하는 account에 대해서만 @ManyToMany 관계에 대해서 인식?? 하고 있을 것 이라고 생각함.  --> 매우 중요한 부분이 될 듯!
+
+        Optional<Account> byId = accountRepository.findById(account.getId()); //Optional 래퍼 클래스로
+        byId.ifPresent(a->a.getTags().add(tag));
+        // 여기서 살펴보면 매개변수로 받은 tag랑 tagRepository로 Tag DB에 저장한 객체가 동일하다.
+        // 동일한 객체이기 때문에 JPA와 데이터베이스를 통해서 서로 연동이 되는 것 같음!. -> 클래스에 기본키인 id를 통해서 하겠지??
+
+
     }
 }

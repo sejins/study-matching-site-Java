@@ -3,20 +3,17 @@ package com.sejin.settings;
 import com.sejin.account.AccountService;
 import com.sejin.account.CurrentUser;
 import com.sejin.domain.Account;
-import com.sejin.settings.form.NicknameForm;
-import com.sejin.settings.form.Notifications;
-import com.sejin.settings.form.PasswordForm;
-import com.sejin.settings.form.Profile;
+import com.sejin.domain.Tag;
+import com.sejin.settings.form.*;
 import com.sejin.settings.validator.PasswordFormValidator;
+import com.sejin.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
@@ -30,8 +27,10 @@ public class SettingsController {
     public void initBinder(WebDataBinder webDataBinder){
         webDataBinder.addValidators(new PasswordFormValidator());
     }
+    // TODO 닉네임 Validator로 Validation 해주기~~ 빼먹은듯
 
     private final AccountService accountService;
+    private final TagRepository tagRepository;
 
     @GetMapping("/settings/profile")
     public String profileUpdateForm(@CurrentUser Account account, Model model){
@@ -119,5 +118,27 @@ public class SettingsController {
         accountService.updateNickname(account,nicknameForm.getNickname());
         attributes.addFlashAttribute("message","닉네임을 수정했습니다.");
         return "redirect:"+"/settings/account";
+    }
+
+    @GetMapping("/settings/tags")
+    public String updateTags(@CurrentUser Account account, Model model){
+        model.addAttribute(account);
+        return "settings/tags";
+    }
+
+    @PostMapping("/settings/tags/add")
+    @ResponseBody
+    public ResponseEntity addTag(@CurrentUser Account account, @RequestBody TagForm tagForm){
+        String title = tagForm.getTagTitle();
+        // title에 해당하는 태그가 있는지 DB에서 확인하고, 없으면 저장해서 account에 추가를 해주면 된다. -> TagRepository가 필요하당!
+        // Optional로 받아오는 코드도 있었는데 이건 나중에 람다 다시 복습하고 이해하던가~
+
+        Tag tag = tagRepository.findByTitle(title);
+        if(tag == null){
+            tag = tagRepository.save(Tag.builder().title(tagForm.getTagTitle()).build());
+        }
+        // tag가 없으면 DE에 새로 만들어서 account와 관계를 맺고, 이미 존재하면 존재하는 객체로 account와 관계를 맺는다.
+        accountService.addTag(account, tag);
+        return ResponseEntity.ok().build(); // AJAX요청에 대한 응답으로, 뷰룰 응답으로 보내는 것이 아니다!
     }
 }

@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -54,6 +55,9 @@ public class Account { // 계정 도메인
     private boolean studyUpdatedByEmail;
 
     private boolean studyUpdatedByWeb = true;
+
+    @ManyToMany
+    private Set<Tag> tags; // 다대다 관계로 Account에서만 Tag를 참조하는 단방항 방식
 
     public void generateEmailCheckToken() {
         this.emailCheckToken = UUID.randomUUID().toString();
