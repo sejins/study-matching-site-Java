@@ -1,5 +1,7 @@
 package com.sejin.settings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sejin.account.AccountService;
 import com.sejin.account.CurrentUser;
 import com.sejin.domain.Account;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,7 @@ public class SettingsController {
 
     private final AccountService accountService;
     private final TagRepository tagRepository;
+    private final ObjectMapper objectMapper;
 
     @GetMapping("/settings/profile")
     public String profileUpdateForm(@CurrentUser Account account, Model model){
@@ -124,7 +128,7 @@ public class SettingsController {
     }
 
     @GetMapping("/settings/tags")
-    public String updateTags(@CurrentUser Account account, Model model){
+    public String updateTags(@CurrentUser Account account, Model model) throws JsonProcessingException {
         model.addAttribute(account);
         // detached 객체에 대해서는 @ManyToMany로 관계를 맺었기 떄문에, tags 필드에 대한 값이 null이다! 즉, 맺은 관계에 대해서 참조가 되지 않는다.
         // 그래서 persistent한 account 객체를 다시 생성할 필요가 있다.
@@ -134,6 +138,10 @@ public class SettingsController {
         // Java8 이후의 문법. 람다식과 스트림!!
         // tags의 정보들을 title에 해당하는 문자열들로 매핑하고, collector를 통해서 리스트로 만듦.
         model.addAttribute("tags",tags.stream().map(Tag::getTitle).collect(Collectors.toList()));
+        //tagify 자동완성에 사용될, 모든 태그 정보에 대한 문자열 포맷을 만들어서 뷰에 전달
+        List<String> allTags = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allTags));
+
         return "settings/tags";
     }
 
