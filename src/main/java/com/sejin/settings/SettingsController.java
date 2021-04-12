@@ -8,6 +8,7 @@ import com.sejin.settings.form.*;
 import com.sejin.settings.validator.PasswordFormValidator;
 import com.sejin.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -123,6 +126,14 @@ public class SettingsController {
     @GetMapping("/settings/tags")
     public String updateTags(@CurrentUser Account account, Model model){
         model.addAttribute(account);
+        // detached 객체에 대해서는 @ManyToMany로 관계를 맺었기 떄문에, tags 필드에 대한 값이 null이다! 즉, 맺은 관계에 대해서 참조가 되지 않는다.
+        // 그래서 persistent한 account 객체를 다시 생성할 필요가 있다.
+        // 그래서 persistent 한 객체에 대해서는 DB에 값을 넣지 않아도 null이 아닌 비어있는 Set이 출력된다.
+        Set<Tag> tags = accountService.getTags(account);
+        // tags 정보들을 문자열 리스트로 변경하는 작업이 필요하다. 그다음 뷰에 추가 해준다.
+        // Java8 이후의 문법. 람다식과 스트림!!
+        // tags의 정보들을 title에 해당하는 문자열들로 매핑하고, collector를 통해서 리스트로 만듦.
+        model.addAttribute("tags",tags.stream().map(Tag::getTitle).collect(Collectors.toList()));
         return "settings/tags";
     }
 
@@ -140,5 +151,17 @@ public class SettingsController {
         // tag가 없으면 DE에 새로 만들어서 account와 관계를 맺고, 이미 존재하면 존재하는 객체로 account와 관계를 맺는다.
         accountService.addTag(account, tag);
         return ResponseEntity.ok().build(); // AJAX요청에 대한 응답으로, 뷰룰 응답으로 보내는 것이 아니다!
+    }
+
+    @PostMapping("settings/tags/remove")
+    @ResponseBody
+    public ResponseEntity removeTag(@CurrentUser Account account, @RequestBody TagForm tagForm){
+        String title = tagForm.getTagTitle();
+        Tag tag = tagRepository.findByTitle(title);
+        if(tag==null){
+            return ResponseEntity.badRequest().build();
+        }
+        accountService.removeTag(account,tag);
+        return ResponseEntity.ok().build();
     }
 }
