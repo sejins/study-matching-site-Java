@@ -1,8 +1,15 @@
 package com.sejin.settings;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sejin.WithAccount;
 import com.sejin.account.AccountRepository;
+import com.sejin.account.AccountService;
 import com.sejin.domain.Account;
+
+import com.sejin.domain.Tag;
+import com.sejin.settings.form.TagForm;
+import com.sejin.tag.TagRepository;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,15 +17,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
+import static com.sejin.settings.SettingsController.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 class SettingsControllerTest {
@@ -31,16 +42,23 @@ class SettingsControllerTest {
 
     @Autowired PasswordEncoder passwordEncoder;
 
+    @Autowired ObjectMapper objectMapper;
+
+    @Autowired TagRepository tagRepository;
+
+    @Autowired AccountService accountService;
+
     @AfterEach
     void afterEach(){
         accountRepository.deleteAll();
+        tagRepository.deleteAll();
     }
 
     @WithAccount("jjinse")
     @DisplayName("프로필 폼 요청")
     @Test
     void updateProfileForm() throws Exception{
-        mockMvc.perform(get("/settings/profile")) // get요청일지라도 인증된 사용자에 대해서 접근할 수 있기 때문에 인증된 사용자를 생성해줘야한다.
+        mockMvc.perform(get(ROOT + SETTINGS + PROFILE)) // get요청일지라도 인증된 사용자에 대해서 접근할 수 있기 때문에 인증된 사용자를 생성해줘야한다.
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("profile"));
@@ -56,7 +74,7 @@ class SettingsControllerTest {
     void updateProfile() throws Exception{
         String bio = "짧은 소개를 수정하는 경우";
 
-        mockMvc.perform(post("/settings/profile")
+        mockMvc.perform(post(ROOT + SETTINGS + PROFILE)
             .param("bio",bio)
             .with(csrf()))
             .andExpect(status().is3xxRedirection())
@@ -73,7 +91,7 @@ class SettingsControllerTest {
     void updateProfile_error() throws Exception{
         String bio = "긴 소개를 수정하는 경우, 긴 소개를 수정하는 경우, 긴 소개를 수정하는 경우, 긴 소개를 수정하는 경우"; // @Valid를 사용해서 35자 넘으면 검증에서 걸리게 해놨었음.
 
-        mockMvc.perform(post("/settings/profile")
+        mockMvc.perform(post(ROOT + SETTINGS + PROFILE)
                 .param("bio",bio)
                 .with(csrf()))
                 .andExpect(status().isOk())
@@ -92,7 +110,7 @@ class SettingsControllerTest {
     @Test
     void updatePassword_form() throws Exception{
 
-        mockMvc.perform(get("/settings/password"))
+    mockMvc.perform(get(ROOT + SETTINGS + PASSWORD))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("passwordForm"));
@@ -103,7 +121,7 @@ class SettingsControllerTest {
     @Test
     void updatePassword_success() throws Exception{
 
-        mockMvc.perform(post("/settings/password")
+        mockMvc.perform(post(ROOT + SETTINGS + PASSWORD)
                 .param("newPassword","12345678")
                 .param("newPasswordConfirm","12345678")
                 .with(csrf()))
@@ -122,7 +140,7 @@ class SettingsControllerTest {
     @Test
     void updatePassword_error() throws Exception{
 
-        mockMvc.perform(post("/settings/password")
+        mockMvc.perform(post(ROOT + SETTINGS + PASSWORD)
                 .param("newPassword","12345678")
                 .param("newPasswordConfirm","11111111")
                 .with(csrf()))
@@ -138,7 +156,7 @@ class SettingsControllerTest {
     @Test
     void updateNotifications_form() throws Exception{
 
-        mockMvc.perform(get("/settings/notifications"))
+        mockMvc.perform(get(ROOT + SETTINGS + NOTIFICATIONS))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("notifications"));
@@ -149,7 +167,7 @@ class SettingsControllerTest {
     @Test
     void updateNotifications_success() throws Exception{
 
-        mockMvc.perform(post("/settings/notifications")
+        mockMvc.perform(post(ROOT + SETTINGS + NOTIFICATIONS)
                 .param("studyCreatedByEmail","true")
                 .param("studyCreatedByWeb","true")
                 .param("studyEnrollmentByEmail","true")
@@ -176,7 +194,7 @@ class SettingsControllerTest {
     @Test
     void updateNotifications_error() throws Exception{
 
-        mockMvc.perform(post("/settings/notifications")
+        mockMvc.perform(post(ROOT + SETTINGS + NOTIFICATIONS)
                 .param("studyCreatedByEmail","hellohihihi")
                 .with(csrf()))
                 .andExpect(status().isOk())
@@ -184,5 +202,62 @@ class SettingsControllerTest {
                 .andExpect(model().hasErrors())
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("notifications"));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정의 태그 수정 폼")
+    @Test
+    void updateTagsForm() throws Exception {
+        mockMvc.perform(get(ROOT + SETTINGS + TAGS))
+                .andExpect(view().name("settings/tags"))
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("tags"))
+                .andExpect(model().attributeExists("whitelist"));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정에 태그 추가")
+    @Test
+    void addTag() throws Exception{ // TODO 테스트 코드 수정 필요
+
+        TagForm tagForm = new TagForm();
+        tagForm.setTagTitle("newTag");
+
+        mockMvc.perform(post(ROOT + SETTINGS + TAGS + "/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tagForm))
+                .with(csrf()))
+                .andExpect(status().isOk()); // 추가 요청
+        // JSON의 형태로 post 요청의 body부분에 데이터를 넣어서 전송.
+        Tag tag = tagRepository.findByTitle("newTag");
+        assertNotNull(tag);
+        assertTrue(accountRepository.findByNickname("jjinse").getTags().contains(tag));
+        // org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.sejin.domain.Account.tags, could not initialize proxy - no Session
+        // accountRepository.findByNickname("jjinse")까지는 트랜잭션이 적용이 되지만, 이 메서드가 호출되고 난 이후에는 트랜잭션이 적용이 되지 않는다.
+        // 그래서 관계에 대한 tags 정보를 찾지 못하는 것이다.
+        // 이번 테스트에서는 이러한 일이 많이 발생할 것이기 때문에 테스트 클래스에서 Transactional을 지정해준다.
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정에 태그 삭제")
+    @Test
+    void removeTag() throws Exception { // TODO 테스트 코드 수정 필요
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        Tag newTag = tagRepository.save(Tag.builder().title("newTag").build());
+        accountService.addTag(jjinse,newTag);
+
+        assertTrue(jjinse.getTags().contains(newTag)); // 일단 먼저 account에 태그 정보를 저장하기
+
+        TagForm tagForm = new TagForm();
+        tagForm.setTagTitle("newTag");  // 삭제 AJAX 요청을 보낼 태그 정보를 생성
+
+        mockMvc.perform(post(ROOT + SETTINGS + TAGS + "/remove")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tagForm))
+                .with(csrf()))
+                .andExpect(status().isOk()); // 삭제 요청
+        // 제대로 동작했다면 newTag에 해당하는 태그가 account 객체와 연결이 끊겼을 것임.
+        assertFalse(jjinse.getTags().contains(newTag));
+
     }
 }

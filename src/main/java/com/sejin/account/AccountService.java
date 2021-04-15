@@ -2,6 +2,7 @@ package com.sejin.account;
 
 import com.sejin.domain.Account;
 import com.sejin.domain.Tag;
+import com.sejin.domain.Zone;
 import com.sejin.settings.form.Notifications;
 import com.sejin.settings.form.Profile;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class AccountService implements UserDetailsService {
 
     private final AccountRepository accountRepository;
@@ -37,12 +38,15 @@ public class AccountService implements UserDetailsService {
 
     public Account processNewAccount(SignUpForm signUpForm) {
         Account newAccount = saveNewAccount(signUpForm);
-        newAccount.generateEmailCheckToken();
         sendSignUpConfirmEmail(newAccount);
         return newAccount;
     }
 
     private Account saveNewAccount(@Valid SignUpForm signUpForm) {
+        signUpForm.setPassword(passwordEncoder.encode(signUpForm.getPassword()));
+        Account account = modelMapper.map(signUpForm,Account.class);
+        /*
+        // 리팩토링
         Account account = Account.builder()
                 .email(signUpForm.getEmail())
                 .nickname(signUpForm.getNickname())
@@ -51,7 +55,8 @@ public class AccountService implements UserDetailsService {
                 .studyEnrollmentByWeb(true)
                 .studyUpdatedByWeb(true)
                 .build();
-
+         */
+        account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
 
@@ -155,7 +160,6 @@ public class AccountService implements UserDetailsService {
         // 여기서 살펴보면 매개변수로 받은 tag랑 tagRepository로 Tag DB에 저장한 객체가 동일하다.
         // 동일한 객체이기 때문에 JPA와 데이터베이스를 통해서 서로 연동이 되는 것 같음!. -> 클래스에 기본키인 id를 통해서 하겠지??
 
-
     }
 
     public Set<Tag> getTags(Account account) {
@@ -166,5 +170,10 @@ public class AccountService implements UserDetailsService {
     public void removeTag(Account account, Tag tag) {
         Optional<Account> byId = accountRepository.findById(account.getId());
         byId.ifPresent(a->a.getTags().remove(tag));
+    }
+
+    public Set<Zone> getZones(Account account) {
+        Optional<Account> byId = accountRepository.findById(account.getId());
+        return byId.orElseThrow().getZones();
     }
 }

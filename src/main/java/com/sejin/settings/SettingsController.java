@@ -6,12 +6,14 @@ import com.sejin.account.AccountService;
 import com.sejin.account.CurrentUser;
 import com.sejin.domain.Account;
 import com.sejin.domain.Tag;
+import com.sejin.domain.Zone;
 import com.sejin.settings.form.*;
 import com.sejin.settings.validator.PasswordFormValidator;
 import com.sejin.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
@@ -24,10 +26,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.sejin.settings.SettingsController.ROOT;
+import static com.sejin.settings.SettingsController.SETTINGS;
 
+@RequestMapping(ROOT+SETTINGS)
 @Controller
 @RequiredArgsConstructor
 public class SettingsController {
+
+    static final String ROOT = "/";
+    static final String SETTINGS = "settings";
+    static final String PROFILE = "/profile";
+    static final String PASSWORD = "/password";
+    static final String NOTIFICATIONS = "/notifications";
+    static final String ACCOUNT = "/account";
+    static final String TAGS = "/tags";
+    static final String ZONES = "/zones";
+
 
     @InitBinder("passwordForm")
     public void initBinder(WebDataBinder webDataBinder){
@@ -39,7 +54,7 @@ public class SettingsController {
     private final TagRepository tagRepository;
     private final ObjectMapper objectMapper;
 
-    @GetMapping("/settings/profile")
+    @GetMapping(PROFILE)
     public String profileUpdateForm(@CurrentUser Account account, Model model){
         // profile 뷰에서 프로필 수정은 isOwner 를 통해 자신의 프로필에 대해서만 요청이 가능하므로
         // url에 유저에 대한 정보가 없어도 된다.
@@ -48,7 +63,7 @@ public class SettingsController {
         return "settings/profile";
     }
 
-    @PostMapping("/settings/profile")
+    @PostMapping(PROFILE)
     public String updateProfile(@CurrentUser Account account, @Valid @ModelAttribute Profile profile, Errors errors, Model model, RedirectAttributes attributes){
         // Error클래스 객체를 통해서 폼으로부터 받아오는 매개변수의 바인딩 에러를 검사한다. -> 여기서는 Profile클래스의 객체.  Error클래스의 객체는 항상 오른쪽에 위치해야 한다.
 
@@ -67,14 +82,14 @@ public class SettingsController {
 
     }
 
-    @GetMapping("/settings/password")
+    @GetMapping(PASSWORD)
     public String passwordUpdateForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new PasswordForm());
         return "settings/password";
     }
 
-    @PostMapping("/settings/password")
+    @PostMapping(PASSWORD)
     public String updatePassword(@CurrentUser Account account, @Valid @ModelAttribute PasswordForm passwordForm, Errors errors, Model model, RedirectAttributes attributes){
         // @Valid를 통해서 패스워드가 8~50 자인지 검증하고, Validator를 통해서 패스워드와 확인 패스워드 값이 일치하는지 검증한다.
         if(errors.hasErrors()){
@@ -87,14 +102,14 @@ public class SettingsController {
         return "redirect:" + "/settings/password";
     }
 
-    @GetMapping("/settings/notifications")
+    @GetMapping(NOTIFICATIONS)
     public String updateNotificationForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new Notifications(account));
         return "settings/notifications";
     }
 
-    @PostMapping("/settings/notifications")
+    @PostMapping(NOTIFICATIONS)
     public String updateNotifications(@CurrentUser Account account,@Valid @ModelAttribute Notifications notifications, Errors errors,
                                       Model model, RedirectAttributes attributes){
         if(errors.hasErrors()){
@@ -107,14 +122,14 @@ public class SettingsController {
         return "redirect:"+"/settings/notifications";
     }
 
-    @GetMapping("/settings/account")
+    @GetMapping(ACCOUNT)
     public String updateAccountForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new NicknameForm(account));
         return "settings/account";
     }
 
-    @PostMapping("/settings/account")
+    @PostMapping(ACCOUNT)
     public String updateAccount(@CurrentUser Account account, @Valid @ModelAttribute NicknameForm nicknameForm, Errors errors,
                                 Model model, RedirectAttributes attributes){
         if(errors.hasErrors()){
@@ -127,7 +142,7 @@ public class SettingsController {
         return "redirect:"+"/settings/account";
     }
 
-    @GetMapping("/settings/tags")
+    @GetMapping(TAGS)
     public String updateTags(@CurrentUser Account account, Model model) throws JsonProcessingException {
         model.addAttribute(account);
         // detached 객체에 대해서는 @ManyToMany로 관계를 맺었기 떄문에, tags 필드에 대한 값이 null이다! 즉, 맺은 관계에 대해서 참조가 되지 않는다.
@@ -145,7 +160,7 @@ public class SettingsController {
         return "settings/tags";
     }
 
-    @PostMapping("/settings/tags/add")
+    @PostMapping(TAGS + "/add")
     @ResponseBody
     public ResponseEntity addTag(@CurrentUser Account account, @RequestBody TagForm tagForm){
         String title = tagForm.getTagTitle();
@@ -161,7 +176,7 @@ public class SettingsController {
         return ResponseEntity.ok().build(); // AJAX요청에 대한 응답으로, 뷰룰 응답으로 보내는 것이 아니다!
     }
 
-    @PostMapping("settings/tags/remove")
+    @PostMapping(TAGS + "/remove")
     @ResponseBody
     public ResponseEntity removeTag(@CurrentUser Account account, @RequestBody TagForm tagForm){
         String title = tagForm.getTagTitle();
@@ -171,5 +186,14 @@ public class SettingsController {
         }
         accountService.removeTag(account,tag);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(ZONES)
+    public String updateZonesForm(@CurrentUser Account account, Model model){
+        model.addAttribute(account);
+
+        // account 객체는 persist 객체가 아니다.
+        // persist한 객체로부터 DB와 싱크를 통해서 zone에 대한 정보를 가져와야한다.
+        Set<Zone> zones = accountService.getZones(account);
     }
 }
