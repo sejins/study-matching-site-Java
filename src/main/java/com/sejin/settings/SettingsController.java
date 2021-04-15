@@ -10,6 +10,7 @@ import com.sejin.domain.Zone;
 import com.sejin.settings.form.*;
 import com.sejin.settings.validator.PasswordFormValidator;
 import com.sejin.tag.TagRepository;
+import com.sejin.zone.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +54,7 @@ public class SettingsController {
     private final AccountService accountService;
     private final TagRepository tagRepository;
     private final ObjectMapper objectMapper;
+    private final ZoneRepository zoneRepository;
 
     @GetMapping(PROFILE)
     public String profileUpdateForm(@CurrentUser Account account, Model model){
@@ -60,7 +62,7 @@ public class SettingsController {
         // url에 유저에 대한 정보가 없어도 된다.
         model.addAttribute(account);
         model.addAttribute(new Profile(account)); // 폼 클래스를 뷰에 넘겨준다.
-        return "settings/profile";
+        return SETTINGS + PROFILE;
     }
 
     @PostMapping(PROFILE)
@@ -69,12 +71,12 @@ public class SettingsController {
 
         if(errors.hasErrors()){ // @Valid 에 결려서 바인딩 에러가 발생할 경우!
             model.addAttribute(account); // 기존의 폼에서 받아오는 것들은 이미 model 객체에 존재하게 된다. 그래서 account 객체만 추가로 넣어주면 된다.
-            return "settings/profile";
+            return SETTINGS + PROFILE;
         }
 
         attributes.addFlashAttribute("message","프로필을 수정했습니다."); // 리다이렉트시에 간단한 정보를 넣어서 뷰에 전달할 수 있다.
         accountService.updateProfile(account,profile); // Transaction 처리때문에 AccountService클래스 객체에 위임을 한다.
-        return "redirect:/settings/profile";
+        return "redirect:" + SETTINGS + PROFILE;
 
         // 여기서 발생하는 Spring MVC관련 이슈 -> Spring MVC는 @ModelAttribute로 받아오는 객체를 생성할때, 먼저 생성자를 통해서 인스턴스를 생성한 뒤, setter를 통해서 값을 주입하는 방식으로 동작한다.
         // 내 코드의 기존의 Profile 클래스의 생성자는 account를 인자로 받기 때문에, Spring MVC가 생성자를 호출하는 당시에 어디에서도 account 객체를 참조할 수 없어서 NullpointException이 발생하게 된다.
@@ -86,7 +88,7 @@ public class SettingsController {
     public String passwordUpdateForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new PasswordForm());
-        return "settings/password";
+        return SETTINGS + PASSWORD;
     }
 
     @PostMapping(PASSWORD)
@@ -94,19 +96,19 @@ public class SettingsController {
         // @Valid를 통해서 패스워드가 8~50 자인지 검증하고, Validator를 통해서 패스워드와 확인 패스워드 값이 일치하는지 검증한다.
         if(errors.hasErrors()){
             model.addAttribute(account);
-            return "settings/password";
+            return SETTINGS + PASSWORD;
         }
 
         accountService.updatePassword(account,passwordForm.getNewPassword());
         attributes.addFlashAttribute("message","패스워드를 변경했습니다.");
-        return "redirect:" + "/settings/password";
+        return "redirect:" + SETTINGS + PASSWORD;
     }
 
     @GetMapping(NOTIFICATIONS)
     public String updateNotificationForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new Notifications(account));
-        return "settings/notifications";
+        return SETTINGS + NOTIFICATIONS;
     }
 
     @PostMapping(NOTIFICATIONS)
@@ -114,19 +116,19 @@ public class SettingsController {
                                       Model model, RedirectAttributes attributes){
         if(errors.hasErrors()){
             model.addAttribute(account);
-            return "settings/notifications";
+        return SETTINGS + NOTIFICATIONS;
         }
 
         accountService.updateNotifications(account,notifications);
         attributes.addFlashAttribute("message","알림 설정을 변경 했습니다.");
-        return "redirect:"+"/settings/notifications";
+        return "redirect:" + SETTINGS + NOTIFICATIONS;
     }
 
     @GetMapping(ACCOUNT)
     public String updateAccountForm(@CurrentUser Account account, Model model){
         model.addAttribute(account);
         model.addAttribute(new NicknameForm(account));
-        return "settings/account";
+        return SETTINGS + ACCOUNT;
     }
 
     @PostMapping(ACCOUNT)
@@ -134,12 +136,12 @@ public class SettingsController {
                                 Model model, RedirectAttributes attributes){
         if(errors.hasErrors()){
             model.addAttribute(account);
-            return "settings/account";
+            return SETTINGS + ACCOUNT;
         }
 
         accountService.updateNickname(account,nicknameForm.getNickname());
         attributes.addFlashAttribute("message","닉네임을 수정했습니다.");
-        return "redirect:"+"/settings/account";
+        return "redirect:" + SETTINGS + ACCOUNT;
     }
 
     @GetMapping(TAGS)
@@ -157,7 +159,7 @@ public class SettingsController {
         List<String> allTags = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
         model.addAttribute("whitelist", objectMapper.writeValueAsString(allTags));
 
-        return "settings/tags";
+        return SETTINGS + TAGS;
     }
 
     @PostMapping(TAGS + "/add")
@@ -189,11 +191,43 @@ public class SettingsController {
     }
 
     @GetMapping(ZONES)
-    public String updateZonesForm(@CurrentUser Account account, Model model){
+    public String updateZonesForm(@CurrentUser Account account, Model model) throws JsonProcessingException {
         model.addAttribute(account);
 
         // account 객체는 persist 객체가 아니다.
         // persist한 객체로부터 DB와 싱크를 통해서 zone에 대한 정보를 가져와야한다.
         Set<Zone> zones = accountService.getZones(account);
+        model.addAttribute("zones",zones.stream().map(Zone::toString).collect(Collectors.toList())); // 지역정보들을 리스트로 매핑해서 뷰에 전달.
+
+         List<String> allZones = zoneRepository.findAll().stream().map(Zone::toString).collect(Collectors.toList());
+         model.addAttribute("whitelist", objectMapper.writeValueAsString(allZones)); // whitelist로 디비에 저장된 전체 지역정보를 뷰로 전달.
+
+        return SETTINGS + ZONES;
+    }
+
+    @ResponseBody
+    @PostMapping(ZONES + "/add")
+    public ResponseEntity addZone(@CurrentUser Account account, @RequestBody ZoneForm zoneForm){
+
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+
+        if(zone == null){
+            return ResponseEntity.badRequest().build(); // 태그와는 다르게 이때는 없으면 새로운 지역정보를 만들지 않는다.
+        }
+        accountService.addZone(account,zone); // account와 zone 객체 연결
+        return ResponseEntity.ok().build();
+    }
+
+    @ResponseBody
+    @PostMapping(ZONES + "/remove")
+    public ResponseEntity removeZone(@CurrentUser Account account, @RequestBody ZoneForm zoneForm){
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+
+        if(zone == null){
+            return ResponseEntity.badRequest().build();
+        }
+
+        accountService.removeZone(account,zone);
+        return ResponseEntity.ok().build();
     }
 }
