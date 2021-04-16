@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.mail.internet.MimeMessage;
 import java.io.InputStream;
 
-@Profile("local") // profile 이 "local"일 때 빈으로 등록이 된다.
+@Profile({"local","dev"}) // profile 이 "local" 또는 "dev"일 때 빈으로 등록이 된다.
 @Component
 @Slf4j
 public class ConsoleMailSender implements JavaMailSender {
@@ -28,7 +28,6 @@ public class ConsoleMailSender implements JavaMailSender {
 
     @Override
     public void send(MimeMessage mimeMessage) throws MailException {
-
     }
 
     @Override
