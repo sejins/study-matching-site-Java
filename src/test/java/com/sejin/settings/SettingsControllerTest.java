@@ -8,10 +8,14 @@ import com.sejin.account.AccountService;
 import com.sejin.domain.Account;
 
 import com.sejin.domain.Tag;
+import com.sejin.domain.Zone;
 import com.sejin.settings.form.TagForm;
+import com.sejin.settings.form.ZoneForm;
 import com.sejin.tag.TagRepository;
+import com.sejin.zone.ZoneRepository;
 import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,21 +41,24 @@ class SettingsControllerTest {
     // 스프링 시큐리티에서 테스트 코드를 작성할 때 시큐리티 컨텍스트를 설정할 수 있는 기능을 제공한다.
 
     @Autowired MockMvc mockMvc;
-
     @Autowired AccountRepository accountRepository;
-
     @Autowired PasswordEncoder passwordEncoder;
-
     @Autowired ObjectMapper objectMapper;
-
     @Autowired TagRepository tagRepository;
-
     @Autowired AccountService accountService;
+    @Autowired ZoneRepository zoneRepository;
+
+    private Zone testZone = Zone.builder().city("test").localNameOfCity("테스트시").province("테스트도").build();
+
+    @BeforeEach
+    void beforeEach(){
+        zoneRepository.save(testZone);
+    }
 
     @AfterEach
     void afterEach(){
         accountRepository.deleteAll();
-        tagRepository.deleteAll();
+        zoneRepository.deleteAll();
     }
 
     @WithAccount("jjinse")
@@ -259,5 +266,55 @@ class SettingsControllerTest {
         // 제대로 동작했다면 newTag에 해당하는 태그가 account 객체와 연결이 끊겼을 것임.
         assertFalse(jjinse.getTags().contains(newTag));
 
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정의 지역 정보 수정 폼")
+    @Test
+    void updateZoneForm() throws Exception {
+    mockMvc.perform(get(ROOT + SETTINGS + ZONES))
+            .andExpect(view().name(SETTINGS + ZONES))
+            .andExpect(model().attributeExists("account"))
+            .andExpect(model().attributeExists("whitelist"))
+            .andExpect(model().attributeExists("zones"));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정에 지역 정보 추가")
+    @Test
+    void addZone() throws Exception {
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName(testZone.toString());
+
+        mockMvc.perform(post(ROOT + SETTINGS + ZONES + "/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(zoneForm))
+                .with(csrf()))
+                .andExpect(status().isOk()); // 지역 추가 요청
+
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        Zone zone = zoneRepository.findByCityAndProvince(testZone.getCity(), testZone.getProvince());
+        assertTrue(jjinse.getZones().contains(zone));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("계정의 지역정보 삭제")
+    @Test
+    void removeZone() throws Exception {
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        Zone zone = zoneRepository.findByCityAndProvince(testZone.getCity(), testZone.getProvince());
+
+        accountService.addZone(jjinse,zone);
+
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName(testZone.toString());
+
+        mockMvc.perform(post(ROOT + SETTINGS + ZONES + "/remove")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(zoneForm))
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        assertFalse(jjinse.getZones().contains(zone));
     }
 }
