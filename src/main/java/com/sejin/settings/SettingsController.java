@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import static com.sejin.settings.SettingsController.ROOT;
 import static com.sejin.settings.SettingsController.SETTINGS;
 
-@RequestMapping(ROOT+SETTINGS)
+@RequestMapping(ROOT + SETTINGS)
 @Controller
 @RequiredArgsConstructor
 public class SettingsController {
@@ -76,7 +76,7 @@ public class SettingsController {
 
         attributes.addFlashAttribute("message","프로필을 수정했습니다."); // 리다이렉트시에 간단한 정보를 넣어서 뷰에 전달할 수 있다.
         accountService.updateProfile(account,profile); // Transaction 처리때문에 AccountService클래스 객체에 위임을 한다.
-        return "redirect:" + SETTINGS + PROFILE;
+        return "redirect:" + ROOT + SETTINGS + PROFILE;
 
         // 여기서 발생하는 Spring MVC관련 이슈 -> Spring MVC는 @ModelAttribute로 받아오는 객체를 생성할때, 먼저 생성자를 통해서 인스턴스를 생성한 뒤, setter를 통해서 값을 주입하는 방식으로 동작한다.
         // 내 코드의 기존의 Profile 클래스의 생성자는 account를 인자로 받기 때문에, Spring MVC가 생성자를 호출하는 당시에 어디에서도 account 객체를 참조할 수 없어서 NullpointException이 발생하게 된다.
@@ -101,7 +101,7 @@ public class SettingsController {
 
         accountService.updatePassword(account,passwordForm.getNewPassword());
         attributes.addFlashAttribute("message","패스워드를 변경했습니다.");
-        return "redirect:" + SETTINGS + PASSWORD;
+        return "redirect:" + ROOT + SETTINGS + PASSWORD;
     }
 
     @GetMapping(NOTIFICATIONS)
@@ -121,7 +121,7 @@ public class SettingsController {
 
         accountService.updateNotifications(account,notifications);
         attributes.addFlashAttribute("message","알림 설정을 변경 했습니다.");
-        return "redirect:" + SETTINGS + NOTIFICATIONS;
+        return "redirect:" + ROOT + SETTINGS + NOTIFICATIONS;
     }
 
     @GetMapping(ACCOUNT)
@@ -141,7 +141,7 @@ public class SettingsController {
 
         accountService.updateNickname(account,nicknameForm.getNickname());
         attributes.addFlashAttribute("message","닉네임을 수정했습니다.");
-        return "redirect:" + SETTINGS + ACCOUNT;
+        return "redirect:" + ROOT + SETTINGS + ACCOUNT;
     }
 
     @GetMapping(TAGS)
