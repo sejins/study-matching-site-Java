@@ -1,5 +1,6 @@
 package com.sejin.account;
 
+import com.sejin.config.AppProperties;
 import com.sejin.domain.Account;
 import com.sejin.domain.Tag;
 import com.sejin.domain.Zone;
@@ -22,6 +23,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.exceptions.TemplateAssertionException;
 
 
 import javax.swing.text.html.Option;
@@ -40,6 +44,8 @@ public class AccountService implements UserDetailsService {
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final TemplateEngine templateEngine;
+    private final AppProperties appProperties;
 
 
     public Account processNewAccount(SignUpForm signUpForm) {
@@ -67,11 +73,21 @@ public class AccountService implements UserDetailsService {
     }
 
     public void sendSignUpConfirmEmail(Account newAccount) { // 이랗게 사용하면 local 환경, dev 환경에서 모두 동일한 코드로 사용할 수 있다. --> 추상화를 통해서 재사용이 가능해짐.
+        Context context = new Context();
+        context.setVariable("link","/check-email-token?token=" + newAccount.getEmailCheckToken() + "&email=" + newAccount.getEmail());
+        context.setVariable("nickname",newAccount.getNickname());
+        context.setVariable("linkName","이메일 인증하기");
+        context.setVariable("message","진 스터디를 사용하려면 링크를 클릭하세요 😺");
+//        context.setVariable("host","http://localhost:8080"); // 이렇게 하드코딩하면 안된다.
+        context.setVariable("host",appProperties.getHost()); // application.properties 에 지정한 값을 바인딩 받아서 가져온다.
+
+        String message = templateEngine.process("mail/simple-link", context); // view resolver가 알아서 prefix로 templates를 postfix로 .html을 붙혀준다.
+
         // EmailService로 추상화
         EmailMessage emailMessage = EmailMessage.builder().
                         to(newAccount.getEmail())
                         .subject("진스터디, 회원가입 인증")
-                        .message("/check-email-token?token=" + newAccount.getEmailCheckToken() + "&email=" + newAccount.getEmail()).build();
+                        .message(message).build();
 
         emailService.sendEmail(emailMessage);
     }
@@ -149,6 +165,15 @@ public class AccountService implements UserDetailsService {
 
     public void sendLoginLink(Account account) {
         // account에 대한 영속성 컨텍스트가 존재하고, account는 persist한 객체가 된다.
+
+        Context context = new Context();
+        context.setVariable("link","/login-by-email?toekn=" + account.getEmailCheckToken() + "&email=" + account.getEmail());
+        context.setVariable("nickname",account.getNickname());
+        context.setVariable("linkName","이메일로 로그인하기");
+        context.setVariable("messge","진 스터디 로그인을 하시려면 링크를 클릭하세요 😺");
+        context.setVariable("host",appProperties.getHost());
+
+        //TODO sendLoginLink 메서드 호출할 때마다 이메일 인증 토큰값을 새로 생성해줘야하지 않나?? -->  안그러면 이 이메일로 전송된 링크로 언제든지 로그인이 가능한데!
 
         //EmailService로 추상화
         EmailMessage emailMessage = EmailMessage.builder()
