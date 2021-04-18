@@ -3,9 +3,12 @@ package com.sejin.account;
 import com.sejin.domain.Account;
 import com.sejin.domain.Tag;
 import com.sejin.domain.Zone;
+import com.sejin.mail.EmailMessage;
+import com.sejin.mail.EmailService;
 import com.sejin.settings.form.Notifications;
 import com.sejin.settings.form.Profile;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import javax.swing.text.html.Option;
 import javax.validation.Valid;
 import java.util.List;
@@ -29,10 +33,11 @@ import java.util.Set;
 @Transactional
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AccountService implements UserDetailsService {
 
     private final AccountRepository accountRepository;
-    private final JavaMailSender javaMailSender;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
@@ -61,13 +66,14 @@ public class AccountService implements UserDetailsService {
         return accountRepository.save(account);
     }
 
-    public void sendSignUpConfirmEmail(Account newAccount) {
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(newAccount.getEmail());
-        mailMessage.setSubject("진스터디, 회원가입 성공");
-        mailMessage.setText("/check-email-token?token=" + newAccount.getEmailCheckToken() + "&email=" + newAccount.getEmail());
+    public void sendSignUpConfirmEmail(Account newAccount) { // 이랗게 사용하면 local 환경, dev 환경에서 모두 동일한 코드로 사용할 수 있다. --> 추상화를 통해서 재사용이 가능해짐.
+        // EmailService로 추상화
+        EmailMessage emailMessage = EmailMessage.builder().
+                        to(newAccount.getEmail())
+                        .subject("진스터디, 회원가입 인증")
+                        .message("/check-email-token?token=" + newAccount.getEmailCheckToken() + "&email=" + newAccount.getEmail()).build();
 
-        javaMailSender.send(mailMessage);
+        emailService.sendEmail(emailMessage);
     }
 
 
@@ -142,13 +148,15 @@ public class AccountService implements UserDetailsService {
     }
 
     public void sendLoginLink(Account account) {
-        // account에 대한 영속성 컨텍스트가 존재하고, account는 persistent한 객체가 된다.
-        account.generateEmailCheckToken(); // 트랜잭션 내부에 있기 때문에, DB에 변경사항이 반영된다.
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(account.getEmail());
-        mailMessage.setSubject("진스터디, 로그인 링크");
-        mailMessage.setText("/login-by-email?token="+account.getEmailCheckToken()+"&email="+account.getEmail());
-        javaMailSender.send(mailMessage);
+        // account에 대한 영속성 컨텍스트가 존재하고, account는 persist한 객체가 된다.
+
+        //EmailService로 추상화
+        EmailMessage emailMessage = EmailMessage.builder()
+                .to(account.getEmail())
+                .subject("진스터디, 로그인 링크")
+                .message("/login-by-email?toekn=" + account.getEmailCheckToken() + "&email=" + account.getEmail())
+                .build();
+        emailService.sendEmail(emailMessage);
     }
 
     public void addTag(Account account, Tag tag) {

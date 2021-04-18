@@ -1,6 +1,8 @@
 package com.sejin.account;
 
 import com.sejin.domain.Account;
+import com.sejin.mail.EmailMessage;
+import com.sejin.mail.EmailService;
 import org.jboss.jandex.JandexAntTask;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,7 @@ class AccountControllerTest {
     private AccountRepository accountRepository;
 
     @MockBean
-    JavaMailSender javaMailSender; // mocking
+    EmailService emailService; // mocking
 
     @DisplayName("인증 메일 확인 - 입력값 오류")
     @Test
@@ -112,6 +114,6 @@ class AccountControllerTest {
         assertNotNull(account.getEmailCheckToken());
 
 
-        then(javaMailSender).should().send(any(SimpleMailMessage.class)); // 메일을 보내는지!  -> 메일 보내는 코드 없으면 테스트 깨진다.  컨트롤러에 javaMailSender.send 메서드 부분.
+        then(emailService).should().sendEmail(any(EmailMessage.class)); // 메일을 보내는지!  -> 메일 보내는 코드 없으면 테스트 깨진다.  컨트롤러에 javaMailSender.send 메서드 부분.
     }
 }
