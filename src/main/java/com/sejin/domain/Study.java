@@ -1,13 +1,19 @@
 package com.sejin.domain;
 
+import com.sejin.account.UserAccount;
 import lombok.*;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-
+@NamedEntityGraph(name="Study.withAll", attributeNodes = {
+        @NamedAttributeNode("tags"),
+        @NamedAttributeNode("zones"),
+        @NamedAttributeNode("members"),
+        @NamedAttributeNode("managers")})
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
@@ -36,7 +42,7 @@ public class Study {
     private String shortDescription;
 
     @Lob @Basic(fetch = FetchType.EAGER)
-    private String fullDiscription;
+    private String fullDescription;
 
     @Lob @Basic(fetch = FetchType.EAGER)
     private String image;
@@ -55,7 +61,26 @@ public class Study {
 
     private boolean useBanner;
 
+    // 스터디 개설할때, 개설하면서 스터디 매니저로 등록.
     public void addManager(Account account) {
         this.managers.add(account);
+    }
+
+    // 타임리프에서 조건을 위해서 사용
+    public boolean isJoinable(UserAccount userAccount){
+        Account account = userAccount.getAccount();
+        return this.isPublished() && this.isRecruiting() && !this.members.contains(account) && !this.managers.contains(account);
+    }
+
+    // 타임리프에서 조건을 위해서 사용
+    public boolean isMember(UserAccount userAccount){
+        Account account = userAccount.getAccount();
+        return this.members.contains(account);
+    }
+
+    // 타임리프에서 조건을 위해서 사용
+    public boolean isManager(UserAccount userAccount){
+        Account account = userAccount.getAccount();
+        return this.managers.contains(account);
     }
 }
