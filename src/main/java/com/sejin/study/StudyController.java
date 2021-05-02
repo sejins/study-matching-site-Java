@@ -42,8 +42,9 @@ public class StudyController {
     }
 
     @PostMapping("/new-study")
-    public String newStudySubmit(@CurrentUser Account account, @Valid StudyForm studyForm, Errors errors){
+    public String newStudySubmit(@CurrentUser Account account, @Valid StudyForm studyForm, Errors errors, Model model){
         if(errors.hasErrors()){
+            model.addAttribute(account);
             return "study/form";
         }
         // 입력받은 스터디 정보로 스터디를 생성하는 로직
@@ -56,5 +57,12 @@ public class StudyController {
         model.addAttribute(account);
         model.addAttribute(studyRepository.findByPath(path));
         return "study/view";
+    }
+
+    @GetMapping("/study/{path}/members")
+    public String viewStudyMembers(@CurrentUser Account account, Model model, @PathVariable String path){
+        model.addAttribute(account);
+        model.addAttribute(studyRepository.findByPath(path));
+        return "study/members";
     }
 }
