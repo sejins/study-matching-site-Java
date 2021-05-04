@@ -106,10 +106,9 @@ public class AccountController { // 계정 관련 컨트롤러
     public String viewProfile(@PathVariable String nickname, Model model, @CurrentUser Account account){
         // nickname은 조회를 하려고 하는 사람을 알아내기 위한 것이고, account 는 현재 로그인 한 사람에 대한 정보다.
         // 즉 현재 로그인 한 사람과 조회하려고 하는 프로필의 사람이 동일한 사람인지 알아내기 위함이다.
-        Account byNickname = accountRepository.findByNickname(nickname);
-        if(byNickname == null){
-            throw new IllegalArgumentException(nickname + "에 해당하는 사용자가 없습니다.");
-        }
+
+
+        Account byNickname = accountService.getAccount(nickname);
 
         model.addAttribute(byNickname);
         // model.addAttribute("account",byNickname); 과 같은 결과가 된다.  뷰에 캐멀 케이스로 전달이 죔.

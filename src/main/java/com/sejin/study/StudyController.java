@@ -54,15 +54,17 @@ public class StudyController {
 
     @GetMapping("/study/{path}")
     public String viewStudy(@CurrentUser Account account, Model model, @PathVariable String path){
+        Study study = studyService.getStudy(path); // path 에 해당하는 스터디 못 찾으면  예외 던지게 해놨음.
         model.addAttribute(account);
-        model.addAttribute(studyRepository.findByPath(path));
+        model.addAttribute(study);
         return "study/view";
     }
 
     @GetMapping("/study/{path}/members")
     public String viewStudyMembers(@CurrentUser Account account, Model model, @PathVariable String path){
+        Study study = studyService.getStudy(path);
         model.addAttribute(account);
-        model.addAttribute(studyRepository.findByPath(path));
+        model.addAttribute(study);
         return "study/members";
     }
 }

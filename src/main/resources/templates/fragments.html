@@ -219,10 +219,29 @@
         </ul>
     </div>
 
+    <div th:fragment="study-settings-menu (currentMenu)" class="list-group">
+        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'description'}? active"
+        th:href="@{'/study/'+${study.path}+'/settings/description'}">소개</a>
+        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'image'}? active"
+           th:href="@{'/study/'+${study.path}+'/settings/image'}">배너 이미지</a>
+        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'tags'}? active"
+           th:href="@{'/study/'+${study.path}+'/settings/tags'}">스터디 주제</a>
+        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'zones'}? active"
+           th:href="@{'/study/'+${study.path}+'/settings/zones'}">활동 지역</a>
+        <a class="list-group-item list-group-item-action list-group-item-danger" th:classappend="${currentMenu == 'study'}? active"
+           th:href="@{'/study/'+${study.path}+'/settings/study'}">스터디</a>
+    </div>
+
+    <div th:fragment="message" th:if="${message}" class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+        <span th:text="${message}">완료</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
     <script th:fragment="form-validation" type="application/javascript">
         (function () {
             'use strict';
-
             window.addEventListener('load', function () {
                 // Fetch all the forms we want to apply custom Bootstrap validation styles to
                 var forms = document.getElementsByClassName('needs-validation');

@@ -49,8 +49,9 @@ public class AccountService implements UserDetailsService {
 
 
     public Account processNewAccount(SignUpForm signUpForm) {
-        Account newAccount = saveNewAccount(signUpForm);
-        sendSignUpConfirmEmail(newAccount);
+        Account newAccount = saveNewAccount(signUpForm); // persist한 account 객체. 아직 트랜잭션의 내부에 존재하는 것.
+        sendSignUpConfirmEmail(newAccount); // 하지만 만약 sendSignUpConfirmEmail 메서드를 수행하다가 에러가 발생한다면..???!  트랜잭션의 원자성원리에 따라서 Rollback
+        // 롤백이 발생하는 경우에는 새로운 유저 정보가 DB에 저장되지 않는다.
         return newAccount;
     }
 
@@ -219,5 +220,13 @@ public class AccountService implements UserDetailsService {
     public void removeZone(Account account, Zone zone) {
         Optional<Account> byId = accountRepository.findById(account.getId());
         byId.ifPresent(a -> a.getZones().remove(zone));
+    }
+
+    public Account getAccount(String nickname) {
+        Account byNickname = accountRepository.findByNickname(nickname);
+        if(byNickname == null){
+            throw new IllegalArgumentException(nickname + "에 해당하는 사용자가 없습니다.");
+        }
+        return byNickname;
     }
 }

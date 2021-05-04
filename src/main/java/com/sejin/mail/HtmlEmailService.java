@@ -30,6 +30,7 @@ public class HtmlEmailService implements EmailService{
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             log.error("failed to send email", e);
+            throw new RuntimeException(e); // 이메일을 전송하다가 문제가 발생하면 에러 던지게끔
         }
     }
 }

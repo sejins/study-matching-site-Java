@@ -82,4 +82,8 @@ public class Account { // 계정 도메인
         // 이러면 한시간 지나고 나서는 계속 이메일을 보낼 수 있게되는데... 문제가 있는 로직!
         // TODO 로직 수정
     }
+
+    public boolean isManagerOf(Study study) { // 이 메서드는 Account 클래스, Study 클래스 어느 쪽에서 작성하고 사용해도 논리적으로 상관이 없을 듯하다!!
+        return study.getManagers().contains(this);
+    }
 }
