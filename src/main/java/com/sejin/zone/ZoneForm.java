@@ -1,4 +1,4 @@
-package com.sejin.settings.form;
+package com.sejin.zone;
 
 import com.sejin.domain.Zone;
 import lombok.Data;

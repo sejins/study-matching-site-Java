@@ -14,5 +14,10 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
 
     boolean existsByPath(String path);
 
+    @EntityGraph(value="Study.withTagsAndManagers", type = EntityGraph.EntityGraphType.FETCH)
+    Study findAccountWithTagByPath(String path);
+    // WithTag는 JPA에 무의미한 키워드임!! 결국 이렇게 하면 결과는 findByPath와 동일한데 다른 @EntityGraph를 사용 가능.
+    @EntityGraph(value="Study.withZonesAndManagers", type = EntityGraph.EntityGraphType.FETCH)
+    Study findAccountWithZoneByPath(String path);
 
 }

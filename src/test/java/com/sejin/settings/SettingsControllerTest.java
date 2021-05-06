@@ -1,6 +1,5 @@
 package com.sejin.settings;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sejin.WithAccount;
 import com.sejin.account.AccountRepository;
@@ -9,11 +8,10 @@ import com.sejin.domain.Account;
 
 import com.sejin.domain.Tag;
 import com.sejin.domain.Zone;
-import com.sejin.settings.form.TagForm;
-import com.sejin.settings.form.ZoneForm;
+import com.sejin.tag.TagForm;
+import com.sejin.zone.ZoneForm;
 import com.sejin.tag.TagRepository;
 import com.sejin.zone.ZoneRepository;
-import org.hibernate.hql.internal.ast.tree.DotNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

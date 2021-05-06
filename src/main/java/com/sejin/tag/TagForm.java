@@ -1,4 +1,4 @@
-package com.sejin.settings.form;
+package com.sejin.tag;
 
 import lombok.Data;
 

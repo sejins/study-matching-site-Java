@@ -1,24 +1,33 @@
 package com.sejin.study;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sejin.account.CurrentUser;
 import com.sejin.domain.Account;
 import com.sejin.domain.Study;
+import com.sejin.domain.Tag;
+import com.sejin.domain.Zone;
+import com.sejin.zone.ZoneForm;
+import com.sejin.tag.TagForm;
 import com.sejin.study.form.StudyDescriptionForm;
+import com.sejin.tag.TagRepository;
+import com.sejin.tag.TagService;
+import com.sejin.zone.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RequestMapping("/study/{path}/settings")
@@ -27,6 +36,10 @@ public class StudySettingsController {
 
     private final StudyService studyService;
     private final ModelMapper modelMapper;
+    private final TagRepository tagRepository;
+    private final ObjectMapper objectMapper;
+    private final TagService tagService;
+    private final ZoneRepository zoneRepository;
 
     @GetMapping("/description")
     public String viewStudySettingForm(@CurrentUser Account account, Model model, @PathVariable String path){
@@ -88,6 +101,85 @@ public class StudySettingsController {
         studyService.updateStudyImage(image,study);
         attributes.addFlashAttribute("message","스터디 이미지를 성공적으로 수정했습니다.");
         return "redirect:/study/"+getPath(path)+"/settings/banner";
+    }
+
+    @GetMapping("/tags")
+    public String studyTagsForm(@CurrentUser Account account, Model model, @PathVariable String path) throws JsonProcessingException {
+        Study study = studyService.getStudyToUpdate(account,path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+
+        // 현재 tags정보로 저장되어 있는 값을 리스트로 view에 넘겨준다.
+        model.addAttribute("tags",study.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
+
+        List<String> allTagTitles = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
+        model.addAttribute("whitelist",objectMapper.writeValueAsString(allTagTitles));
+        return "study/settings/tags";
+    }
+
+    @PostMapping("/tags/add")
+    @ResponseBody
+    public ResponseEntity addTag(@CurrentUser Account account, @PathVariable String path, @RequestBody TagForm tagForm){
+        //Study study = studyService.getStudyToUpdate(account,path); // DB 쿼리를 생각해볼 필요가 있다.
+        // 그냥 우리가 하는 getStudyToUpdate 메서드를 사용하면, 앞서 설정한 @EntityGraph에 의해서 많은 테이블를 EAGER FETCH로 가져오게 된다.
+        // study, managers, members, zones, tags 정보를 참조하기 위한 쿼리가 발생하게 된다.
+        // 이는 Ajax 요청을 처리하는 로직에는 불필요한 정보들이다.
+        // 그래서 이 Ajax 요청 처리에 필요한 정보들만 쿼리하는 @EntityGraph를 새로 설정하여 불필요한 쿼리의 발생을 방지한다.
+        Study study = studyService.getStudyToUpdateTag(account,path);
+        // 물론 @EntotyGraph를 사용하지 않으면 알아서 필요한 정보에 한해서만 쿼리를 하겠지만, 이는 앞서 살펴본것처럼 여러개의 쿼리를 수행하게 된다.
+        // 수행되는 쿼리의 개수를 줄이기 위해서 @EntotyGraph를 사용해서 필요한 정보를 미리 하나의 쿼리로 가져오는 것이다.
+        Tag tag = tagService.findOrCreateNew(tagForm.getTagTitle());
+        studyService.addTag(study,tag); // JPA 관점에서 study 객체와 tag 객체는 persist 상태인 객체이다.
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/tags/remove")
+    @ResponseBody
+    public ResponseEntity removeTag(@CurrentUser Account account, @PathVariable String path, @RequestBody TagForm tagForm){
+        //Study study = studyService.getStudyToUpdate(account,path); // 마찬가지로 쿼리를 생각해볼 필요가 있다.
+        Study study = studyService.getStudyToUpdateTag(account,path);
+        Tag tag = tagRepository.findByTitle(tagForm.getTagTitle());
+        if(tag==null){
+            return ResponseEntity.badRequest().build();
+        }
+        studyService.removeTag(study,tag);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/zones")
+    public String studyZonesForm(@CurrentUser Account account, @PathVariable String path, Model model) throws JsonProcessingException {
+        Study study = studyService.getStudyToUpdate(account,path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+        model.addAttribute("zones",study.getZones().stream().map(Zone::toString).collect(Collectors.toList()));
+        List<String> allZones = zoneRepository.findAll().stream().map(Zone::toString).collect(Collectors.toList());
+        model.addAttribute("whitelist",objectMapper.writeValueAsString(allZones));
+        return "study/settings/zones";
+    }
+
+    @ResponseBody
+    @PostMapping("/zones/add")
+    public ResponseEntity addZone(@CurrentUser Account account, @PathVariable String path, @RequestBody ZoneForm zoneForm){
+        //Study study = studyService.getStudyToUpdate(account,path);
+        Study study = studyService.getStudyToUpdateZone(account,path);
+        Zone zone  = zoneRepository.findByCityAndProvince(zoneForm.getCityName(),zoneForm.getProvinceName());
+        if(zone==null){
+            return ResponseEntity.badRequest().build();
+        }
+        studyService.addZone(study,zone);
+        return ResponseEntity.ok().build();
+    }
+
+    @ResponseBody
+    @PostMapping("/zones/remove")
+    public ResponseEntity removeZone(@CurrentUser Account account, @PathVariable String path, @RequestBody ZoneForm zoneForm){
+        Study study = studyService.getStudyToUpdateZone(account,path);
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+        if(zone==null){
+            return ResponseEntity.badRequest().build();
+        }
+        studyService.removeZone(study,zone);
+        return ResponseEntity.ok().build();
     }
 
     private String getPath(String path) {

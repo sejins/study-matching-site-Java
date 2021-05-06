@@ -9,12 +9,13 @@ import com.sejin.domain.Tag;
 import com.sejin.domain.Zone;
 import com.sejin.settings.form.*;
 import com.sejin.settings.validator.PasswordFormValidator;
+import com.sejin.tag.TagForm;
 import com.sejin.tag.TagRepository;
+import com.sejin.tag.TagService;
+import com.sejin.zone.ZoneForm;
 import com.sejin.zone.ZoneRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
@@ -55,6 +56,7 @@ public class SettingsController {
     private final TagRepository tagRepository;
     private final ObjectMapper objectMapper;
     private final ZoneRepository zoneRepository;
+    private final TagService tagService;
 
     @GetMapping(PROFILE)
     public String profileUpdateForm(@CurrentUser Account account, Model model){
@@ -169,11 +171,8 @@ public class SettingsController {
         // title에 해당하는 태그가 있는지 DB에서 확인하고, 없으면 저장해서 account에 추가를 해주면 된다. -> TagRepository가 필요하당!
         // Optional로 받아오는 코드도 있었는데 이건 나중에 람다 다시 복습하고 이해하던가~
 
-        Tag tag = tagRepository.findByTitle(title);
-        if(tag == null){
-            tag = tagRepository.save(Tag.builder().title(tagForm.getTagTitle()).build());
-        }
-        // tag가 없으면 DE에 새로 만들어서 account와 관계를 맺고, 이미 존재하면 존재하는 객체로 account와 관계를 맺는다.
+        Tag tag = tagService.findOrCreateNew(title);
+
         accountService.addTag(account, tag);
         return ResponseEntity.ok().build(); // AJAX요청에 대한 응답으로, 뷰룰 응답으로 보내는 것이 아니다!
     }
