@@ -66,6 +66,8 @@ public class Study {
         this.managers.add(account);
     }
 
+    public void addMember(Account account) { this.members.add(account);}
+
     // 타임리프에서 조건을 위해서 사용
     public boolean isJoinable(UserAccount userAccount){
         Account account = userAccount.getAccount();
@@ -83,4 +85,6 @@ public class Study {
         Account account = userAccount.getAccount();
         return this.managers.contains(account);
     }
+
+
 }

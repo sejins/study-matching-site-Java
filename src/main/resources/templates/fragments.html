@@ -222,8 +222,8 @@
     <div th:fragment="study-settings-menu (currentMenu)" class="list-group">
         <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'description'}? active"
         th:href="@{'/study/'+${study.path}+'/settings/description'}">소개</a>
-        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'image'}? active"
-           th:href="@{'/study/'+${study.path}+'/settings/image'}">배너 이미지</a>
+        <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'banner'}? active"
+           th:href="@{'/study/'+${study.path}+'/settings/banner'}">배너 이미지</a>
         <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'tags'}? active"
            th:href="@{'/study/'+${study.path}+'/settings/tags'}">스터디 주제</a>
         <a class="list-group-item list-group-item-action" th:classappend="${currentMenu == 'zones'}? active"
