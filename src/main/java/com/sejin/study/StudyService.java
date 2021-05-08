@@ -49,7 +49,7 @@ public class StudyService {
     }
 
     public void updateStudyDescription(Study study, StudyDescriptionForm studyDescriptionForm) {
-        modelMapper.map(studyDescriptionForm, Study.class);
+        modelMapper.map(studyDescriptionForm,study);
     }
 
     public void enableStudyBanner(Study study) {
@@ -147,5 +147,14 @@ public class StudyService {
 
     public void updateStudyTitle(Study study, String newTitle) {
         study.setTitle(newTitle);
+    }
+
+    public void remove(Study study) {
+        if(study.isRemovable()){
+            studyRepository.delete(study); // 실제로 DB에서 스터디 정보를 삭제
+        }
+        else{
+            throw new IllegalArgumentException("스터디를 삭제할 수 없습니다."); // 뷰에서 의도하지 않은 요청에 대한 처리.
+        }
     }
 }
