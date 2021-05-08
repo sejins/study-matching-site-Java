@@ -137,4 +137,5 @@ public class Study {
             throw new RuntimeException("인원 모집을 중단할 수 없습니다. 스터디가 개설이 되었는지, 또는 이미 인원 모집이 중단되었는지 확인 후 다시 시도하세요.");
         }
     }
+
 }

@@ -235,4 +235,32 @@ public class StudySettingsController {
         attributes.addAttribute("message","인원 모집을 종료합니다.");
         return "redirect:/study/"+getPath(path)+"/settings/study";
     }
+
+    @PostMapping("/study/path")
+    public String updateStudyPath(@CurrentUser Account account, @PathVariable String path, @RequestParam String newPath, RedirectAttributes attributes, Model model){
+        Study study = studyService.getStudyToUpdateStatus(account, path);
+        if(!studyService.isValidPath(newPath)){
+            model.addAttribute(account);
+            model.addAttribute(study);
+            model.addAttribute("studyPathError","해당 스터디 경로는 사용할 수 없습니다. 다른 값을 입력하세요");
+            return "study/settings/study";
+        }
+        studyService.updateStudyPath(study,newPath);
+        attributes.addFlashAttribute("message","스터디 경로를 수정했습니다.");
+        return "redirect:/study/"+getPath(newPath)+"/settings/study"; // 변경된 스터디 주소로 리다이랙트를 시켜야한다.
+    }
+
+    @PostMapping("/study/title")
+    public String updateStudyTitle(@CurrentUser Account account, @PathVariable String path, @RequestParam String newTitle, Model model, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        if(!studyService.isValidTitle(newTitle)){ // 스터디 제목이 50글자를 넘기는지 검증
+            model.addAttribute(account);
+            model.addAttribute(study);
+            model.addAttribute("studyTitleError","스터디 이름을 다시 입력하세요.");
+            return "study/settings/study";
+        }
+        studyService.updateStudyTitle(study,newTitle);
+        attributes.addFlashAttribute("message","스터디 이름을 수정했습니다.");
+        return "redirect:/study/"+getPath(path)+"/settings/study";
+    }
 }
