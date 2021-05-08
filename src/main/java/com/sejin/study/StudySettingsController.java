@@ -186,4 +186,53 @@ public class StudySettingsController {
         return URLEncoder.encode(path, StandardCharsets.UTF_8);
     }
 
+    @GetMapping("/study")
+    public String StudySettingForm(@CurrentUser Account account, @PathVariable String path, Model model){
+        Study study = studyService.getStudyToUpdate(account,path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+        return "study/settings/study";
+    }
+
+    @PostMapping("/study/publish")
+    public String publishStudy(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdateStatus(account,path); // 쿼리 개수 조절로 향상 작업
+        studyService.publish(study);
+        attributes.addFlashAttribute("message","스터디를 공개했습니다.");
+        return "redirect:/study/"+getPath(path)+"/settings/study";
+    }
+
+    @PostMapping("/study/close")
+    public String closeStudy(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        studyService.close(study);
+        attributes.addFlashAttribute("message","스터디를 성공적으로 종료했습니다.");
+        return "redirect:/study/"+getPath(path)+"/settings/study";
+    }
+
+    @PostMapping("/recruit/start")
+    public String startRecruit(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdateStatus(account,path); // 쿼리 개수 조절로 향상 작업
+        if(!study.canUpdateRecruiting()){
+            attributes.addFlashAttribute("message","1시간 안에 인원 모집 설정을 여러번 변경할 수 없습니다.");
+            return "redirect:/study/"+getPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
+            // 단순히 리다이렉트 메세지를 통해서 알려주기만 하면 된다.
+        }
+        studyService.startRecruit(study);
+        attributes.addFlashAttribute("message","인원 모집을 시작합니다.");
+        return "redirect:/study/"+getPath(path)+"/settings/study";
+    }
+
+    @PostMapping("/recruit/stop")
+    public String stopRecruit(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        if(!study.canUpdateRecruiting()){
+            attributes.addFlashAttribute("message","1시간 안에 인원 모집 설정을 여러번 변경할 수 없습니다.");
+            return "redirect:/study/"+getPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
+            // 단순히 리다이렉트 메세지를 통해서 알려주기만 하면 된다.
+        }
+        studyService.stopRecruit(study);
+        attributes.addAttribute("message","인원 모집을 종료합니다.");
+        return "redirect:/study/"+getPath(path)+"/settings/study";
+    }
 }

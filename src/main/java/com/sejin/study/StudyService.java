@@ -79,14 +79,14 @@ public class StudyService {
     }
 
     public Study getStudyToUpdateTag(Account account, String path) {
-        Study study = studyRepository.findAccountWithTagByPath(path);
+        Study study = studyRepository.findStudyWithTagByPath(path);
         checkIfExistingStudy(path,study);
         checkIfManager(account,study);
         return study;
     }
 
     public Study getStudyToUpdateZone(Account account, String path) {
-        Study study = studyRepository.findAccountWithZoneByPath(path);
+        Study study = studyRepository.findStudyWithZoneByPath(path);
         checkIfExistingStudy(path,study);
         checkIfManager(account,study);
         return study;
@@ -105,4 +105,26 @@ public class StudyService {
     }
 
 
+    public Study getStudyToUpdateStatus(Account account, String path) {
+        Study study = studyRepository.findStudyWithManagersByPath(path);
+        checkIfExistingStudy(path,study);
+        checkIfManager(account,study);
+        return study;
+    }
+
+    public void publish(Study study) {
+        study.publish(); // 잘 보도록 하자.
+    }
+
+    public void close(Study study) {
+        study.close();
+    }
+
+    public void startRecruit(Study study) {
+        study.startRecruit();
+    }
+
+    public void stopRecruit(Study study) {
+        study.stopRecruit();
+    }
 }
