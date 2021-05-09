@@ -157,4 +157,21 @@ public class StudyService {
             throw new IllegalArgumentException("스터디를 삭제할 수 없습니다."); // 뷰에서 의도하지 않은 요청에 대한 처리.
         }
     }
+
+    public Study getStudyToJoinOrRemove(String path) {
+        Study study = studyRepository.findStudyWithMembersByPath(path);
+        if(study==null){
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+
+        return study;
+    }
+
+    public void addMember(Study study, Account account) {
+        study.addMember(account);
+    }
+
+    public void removeMember(Study study, Account account) {
+        study.removeMember(account); // 이는 해당 스터디와 사용자의 member 관계를 끊는 것이다.
+    }
 }

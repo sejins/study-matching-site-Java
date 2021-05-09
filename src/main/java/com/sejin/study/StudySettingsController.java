@@ -69,7 +69,7 @@ public class StudySettingsController {
         // 그래서 트랜잭션 내부에서 변경한 Study 정보를 commit만 해주면 되는 것이다.
 
         attributes.addFlashAttribute("message","성공적으로 수정되었습니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/description";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/description";
     }
 
     @GetMapping("/banner")
@@ -85,14 +85,14 @@ public class StudySettingsController {
     public String enableStudyBanner(@CurrentUser Account account, @PathVariable String path){
         Study study = studyService.getStudy(path);
         studyService.enableStudyBanner(study);
-        return "redirect:/study/"+getPath(path)+"/settings/banner";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
     }
 
     @PostMapping("/banner/disable")
     public String disableStudyBanner(@CurrentUser Account account, @PathVariable String path){
         Study study = studyService.getStudy(path);
         studyService.disableStudyBanner(study);
-        return "redirect:/study/"+getPath(path)+"/settings/banner";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
     }
 
     @PostMapping("/banner")
@@ -100,7 +100,7 @@ public class StudySettingsController {
         Study study = studyService.getStudy(path);
         studyService.updateStudyImage(image,study);
         attributes.addFlashAttribute("message","스터디 이미지를 성공적으로 수정했습니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/banner";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
     }
 
     @GetMapping("/tags")
@@ -182,9 +182,7 @@ public class StudySettingsController {
         return ResponseEntity.ok().build();
     }
 
-    private String getPath(String path) {
-        return URLEncoder.encode(path, StandardCharsets.UTF_8);
-    }
+
 
     @GetMapping("/study")
     public String StudySettingForm(@CurrentUser Account account, @PathVariable String path, Model model){
@@ -199,7 +197,7 @@ public class StudySettingsController {
         Study study = studyService.getStudyToUpdateStatus(account,path); // 쿼리 개수 조절로 향상 작업
         studyService.publish(study);
         attributes.addFlashAttribute("message","스터디를 공개했습니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/study";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study";
     }
 
     @PostMapping("/study/close")
@@ -207,7 +205,7 @@ public class StudySettingsController {
         Study study = studyService.getStudyToUpdateStatus(account,path);
         studyService.close(study);
         attributes.addFlashAttribute("message","스터디를 성공적으로 종료했습니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/study";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study";
     }
 
     @PostMapping("/recruit/start")
@@ -215,12 +213,12 @@ public class StudySettingsController {
         Study study = studyService.getStudyToUpdateStatus(account,path); // 쿼리 개수 조절로 향상 작업
         if(!study.canUpdateRecruiting()){
             attributes.addFlashAttribute("message","1시간 안에 인원 모집 설정을 여러번 변경할 수 없습니다.");
-            return "redirect:/study/"+getPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
+            return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
             // 단순히 리다이렉트 메세지를 통해서 알려주기만 하면 된다.
         }
         studyService.startRecruit(study);
         attributes.addFlashAttribute("message","인원 모집을 시작합니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/study";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study";
     }
 
     @PostMapping("/recruit/stop")
@@ -228,12 +226,12 @@ public class StudySettingsController {
         Study study = studyService.getStudyToUpdateStatus(account,path);
         if(!study.canUpdateRecruiting()){
             attributes.addFlashAttribute("message","1시간 안에 인원 모집 설정을 여러번 변경할 수 없습니다.");
-            return "redirect:/study/"+getPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
+            return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
             // 단순히 리다이렉트 메세지를 통해서 알려주기만 하면 된다.
         }
         studyService.stopRecruit(study);
         attributes.addAttribute("message","인원 모집을 종료합니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/study";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study";
     }
 
     @PostMapping("/study/path")
@@ -247,7 +245,7 @@ public class StudySettingsController {
         }
         studyService.updateStudyPath(study,newPath);
         attributes.addFlashAttribute("message","스터디 경로를 수정했습니다.");
-        return "redirect:/study/"+getPath(newPath)+"/settings/study"; // 변경된 스터디 주소로 리다이랙트를 시켜야한다.
+        return "redirect:/study/"+study.getEncodedPath(newPath)+"/settings/study"; // 변경된 스터디 주소로 리다이랙트를 시켜야한다.
     }
 
     @PostMapping("/study/title")
@@ -261,7 +259,7 @@ public class StudySettingsController {
         }
         studyService.updateStudyTitle(study,newTitle);
         attributes.addFlashAttribute("message","스터디 이름을 수정했습니다.");
-        return "redirect:/study/"+getPath(path)+"/settings/study";
+        return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study";
     }
 
     @PostMapping("/study/remove")

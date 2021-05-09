@@ -5,6 +5,8 @@ import lombok.*;
 import org.springframework.data.jpa.repository.EntityGraph;
 
 import javax.persistence.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,6 +24,8 @@ import java.util.Set;
         @NamedAttributeNode("managers")})
 @NamedEntityGraph(name="Study.withManagers",attributeNodes = {
         @NamedAttributeNode("managers")})
+@NamedEntityGraph(name="Study.withMembers",attributeNodes = {
+        @NamedAttributeNode("members")})
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
@@ -75,6 +79,8 @@ public class Study {
     }
 
     public void addMember(Account account) { this.members.add(account);}
+
+    public void removeMember(Account account) { this.members.remove(account);}
 
     // 타임리프에서 조건을 위해서 사용
     public boolean isJoinable(UserAccount userAccount){
@@ -141,4 +147,10 @@ public class Study {
     public boolean isRemovable() {
         return !this.published; //TODO 모임을 했던 스터디는 삭제할 수 없다.
     }
+
+    public String getEncodedPath(String path) {
+            return URLEncoder.encode(path, StandardCharsets.UTF_8);
+    }
+
+
 }
