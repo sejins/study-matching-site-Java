@@ -32,7 +32,7 @@
               </div>
               <div class="form-group">
                   <label for="fullDescription">상세 소개</label>
-                  <textarea id="fullDescription" type="textarea" th:field="*{fullDescription}" class="form-control"
+                  <textarea id="fullDescription" type="textarea" th:field="*{fullDescription}" class="editor form-control"
                             placeholder="스터디에 대한 자세한 설명을 해주세요!" aria-describedby="fullDescriptionHelp" required></textarea>
                   <small id="fullDescriptionHelp" class="form-text text-muted">
                       스터디의 목표, 일정, 진행 방식, 사용할 교재 또는 인터넷 강좌 그리고 모집중인 스터디원 등 스터디에 대한 모든 것을 알려주세요😎
@@ -51,7 +51,7 @@
 
   <div th:replace="fragments.html :: footer"></div>
 </div>
-
+<div th:replace="fragments.html :: editor-script"></div>
 <script type="application/javascript">
   $(function(){
     $('[data-toggle="tooltip"]').tooltip()
