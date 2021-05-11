@@ -9,7 +9,7 @@
                 <h2><a th:href="@{'/study/'+${study.path}}"><span th:text="${study.title}">스터디</span></a> / 새 모임 만들기</h2>
           </div>
           <div class="row justify-content-center">
-              <form class="needs-validation col-sm=10" action="#" th:action="@{'/study/'+${study.path}+'/new_event'}" th:object="${eventForm}" method="post" novalidate>
+              <form class="needs-validation col-sm-10" action="#" th:action="@{'/study/'+${study.path}+'/new-event'}" th:object="${eventForm}" method="post" novalidate>
                     <div class="form-group"><!-- 모임 이름 입력 -->
                         <label for="title">모임 이름</label>
                         <input id="title" type="text" th:field="*{title}" class="form-control" placeholder="모임 이름" aria-describedby="titleHelp" required>
@@ -46,7 +46,7 @@
 
                         <div class="form-group col-md-3">
                             <label for="endEnrollmentDateTime">등록 마감 일시</label>
-                            <input id="endEnrollmentDateTime" type="datetime-local" th:field="*{endEnrollmentDateTime}" class="form-contorl" aria-describedby="endEnrollmentDateTimeHelp" required>
+                            <input id="endEnrollmentDateTime" type="datetime-local" th:field="*{endEnrollmentDateTime}" class="form-control" aria-describedby="endEnrollmentDateTimeHelp" required>
                             <small id="endEnrollmentDateTimeHelp" class="form-text text-muted">
                                 등록 마감 이전에만 스터디 모임 참가 신청을 할 수 있습니다.
                             </small>
@@ -71,7 +71,7 @@
                                    aria-describedby="endDateTimeHelp" required>
                             <small id="endDateTimeHelp" class="form-text text-muted">
                                 모임 종료 일시가 지나면 모임은 자동으로 종료 상태로 바뀝니다.
-                            </small>w
+                            </small>
                             <small class="invalid-feedback">모임 종료 일시를 입력하세요.</small>
                             <small class="form-text text-danger" th:if="${#fields.hasErrors('endDateTime')}" th:errors="*{endDateTime}">Error</small>
                         </div>
