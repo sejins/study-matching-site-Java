@@ -26,8 +26,8 @@ public class Enrollment {
 
     private LocalDateTime enrolledAt;
 
-    private boolean accepted;
+    private boolean accepted; // 승인
 
-    private boolean attended;
+    private boolean attended; // 참여중
 
 }

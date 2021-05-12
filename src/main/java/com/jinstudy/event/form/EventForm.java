@@ -22,7 +22,7 @@ public class EventForm {
     private String description;
 
     @Min(2)
-    private Integer limitOfEnrollments = 2;
+    private Integer limitOfEnrollment = 2;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) // html에서 기본으로 제공하는 포맷을 LocalDateTime에 매핑하기 위한 설정
     private LocalDateTime endEnrollmentDateTime;

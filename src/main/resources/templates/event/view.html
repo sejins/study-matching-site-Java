@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="fragments.html :: head"></head>
-<body class="bg-light">
+<body>
     <nav th:replace="fragments.html :: main-nav"></nav>
     <div th:replace="fragments.html :: study-banner"></div>
     <div class="container">
-        <div class="row py-4 text-left justify-content-center">
+        <div class="row py-4 text-left justify-content-center bg-light">
           <div class="col-6"> <!-- 모임 타이틀 -->
             <span class="h2"><a class="text-decoration-none" href="#" th:href="@{'/study/'+${study.path}}"><span th:text="${study.title}">스터디 이름</span></a> / </span>
             <span class="h2" th:text="${event.title}"></span>
@@ -99,7 +99,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="enroll: ${event.enrollments}">
+                        <tr th:each="enroll: ${event.enrollments}"><!-- 반복문 -->
                             <th scope="row" th:text="${enrollStat.count}"></th>
                             <td>
                                 <a th:href="@{'/profile/' + ${enroll.account.nickname}}"
@@ -210,25 +210,6 @@
         </div>
         <div th:replace="fragments.html :: footer"></div>
     </div>
-    <script src="/node_modules/moment/min/moment-with-locales.js"></script>
-    <script type="application/javascript">
-        $(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-
-            moment.locale('ko');
-            $(".date-time").text(function(index, dateTime) {
-                return moment(dateTime, "YYYY-MM-DD`T`hh:mm").format('LLL');
-            });
-            $(".date").text(function(index, dateTime) {
-                return moment(dateTime, "YYYY-MM-DD`T`hh:mm").format('LL');
-            });
-            $(".weekday").text(function(index, dateTime) {
-                return moment(dateTime, "YYYY-MM-DD`T`hh:mm").format('dddd');
-            });
-            $(".time").text(function(index, dateTime) {
-                return moment(dateTime, "YYYY-MM-DD`T`hh:mm").format('LT');
-            });
-        })
-    </script>
+    <script th:replace="fragments.html :: date-time"></script>
 </body>
 </html>

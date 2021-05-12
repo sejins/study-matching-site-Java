@@ -1,5 +1,6 @@
 package com.jinstudy.domain;
 
+import com.jinstudy.account.UserAccount;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,10 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@NamedEntityGraph(
+        name="Event.withEnrollments",
+        attributeNodes = @NamedAttributeNode("enrollments")
+)
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
 public class Event {
@@ -50,4 +55,41 @@ public class Event {
     private List<Enrollment> enrollments; // Enrollment 클래스(테이블)과 일대다 관계 + 양방향 관계
     // 단순하게 OneToMany를 하게 되면 별도의 조인 테이블을 생성해버린다. mappedBy를 통해서 Enrollment 클래스(테이블)과 양방향 관계라는 것을 명시해줘야함.
     // 그래야 별도의 조인 테이블의 생성 없이 Enrollment 테이블에서 Event 테이블을 외래키로 참조하는 일반적인 형태의 관계가 형성이 됨.
+
+    public boolean isEnrollableFor(UserAccount userAccount){
+        return isNotClosed() && !isAlreadyEnrolled(userAccount);
+    }
+
+    public boolean isDisenrollableFor(UserAccount userAccount){
+        return isNotClosed() && isAlreadyEnrolled(userAccount);
+    }
+
+    public boolean isAttended(UserAccount userAccount){
+        Account account = userAccount.getAccount();
+        for(Enrollment e : this.enrollments){
+            if(e.getAccount().equals(account) && e.isAttended()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAlreadyEnrolled(UserAccount userAccount) {
+        Account account = userAccount.getAccount();
+        for(Enrollment e : this.enrollments){
+            if(e.getAccount().equals(account) && e.isAttended()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isNotClosed() {
+        return endEnrollmentDateTime.isAfter(LocalDateTime.now());
+    }
+
+    public int numberOfRemainSpots(){
+        return this.limitOfEnrollment - (int)this.enrollments.stream().filter(Enrollment::isAccepted).count();
+    }
+
 }

@@ -16,6 +16,9 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/study/{path}")
@@ -26,7 +29,7 @@ public class EventController {
     private final EventService eventService;
     private final ModelMapper modelMapper;
     private final EventValidator eventValidator;
-    private EventRepository eventRepository;
+    private final EventRepository eventRepository;
 
     @InitBinder("eventForm")
     public void initBinder(WebDataBinder webDataBinder){
@@ -54,7 +57,7 @@ public class EventController {
         }
 
         Event event = eventService.createEvent(modelMapper.map(eventForm, Event.class), study, account); // 스터디 정보, 관리자 정보, 폼으로부터 입력받은 정보를 사용한다.
-        return "redirect:/study/"+study.getEncodedPath(path)+"/events/"+event.getId();
+        return "redirect:/study/"+study.getEncodedPath(path)+"/event/"+event.getId();
     }
 
     @GetMapping("/event/{id}")
@@ -67,5 +70,28 @@ public class EventController {
         model.addAttribute(event);
 
         return "event/view";
+    }
+
+    @GetMapping("/events")
+    public String viewStudyEvents(@CurrentUser Account account, @PathVariable String path, Model model){
+        Study study = studyService.getStudy(path); // 스터디에 해당하는 정보를 모두 가져와야하기 때문에 해당 전체 쿼리를 요청하는 메서드가 알맞다.
+        model.addAttribute(account);
+        model.addAttribute(study);
+
+        List<Event> events = eventRepository.findByStudyOrderByStartDateTime(study);
+        List<Event> newEvents = new ArrayList<>();
+        List<Event> oldEvents = new ArrayList<>();
+        events.stream().forEach(e -> {
+            if(e.getEndDateTime().isBefore(LocalDateTime.now())){
+                oldEvents.add(e);
+            }
+            else{
+                newEvents.add(e);
+            }
+        });
+        model.addAttribute("newEvents",newEvents);
+        model.addAttribute("oldEvents",oldEvents);
+        return "study/events";
+
     }
 }
