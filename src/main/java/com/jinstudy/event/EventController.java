@@ -128,4 +128,13 @@ public class EventController {
         // 모임을 수정하고나면 해당 모임으로 리다이랙트를 시켜준다.
         return "redirect:/study/" + study.getEncodedPath(path) + "/event/" + event.getId();
     }
+
+    @DeleteMapping("/event/{id}")
+    public String cancelEvent(@CurrentUser Account account, @PathVariable String path, @PathVariable Long id){
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        Event event = eventRepository.findById(id).orElseThrow();
+        eventService.deleteEvent(event);
+        return "redirect:/study/" + study.getEncodedPath(path) + "/events";
+    }
+
 }
