@@ -92,6 +92,40 @@ public class EventController {
         model.addAttribute("newEvents",newEvents);
         model.addAttribute("oldEvents",oldEvents);
         return "study/events";
+    }
 
+    @GetMapping("/event/{id}/edit")
+    public String updateEventForm(@CurrentUser Account account, @PathVariable String path, @PathVariable Long id, Model model){
+        Study study = studyService.getStudyToUpdate(account,path);
+        Event event = eventRepository.findById(id).orElseThrow();
+        model.addAttribute(account);
+        model.addAttribute(study);
+        model.addAttribute(event);
+        model.addAttribute(modelMapper.map(event,EventForm.class));
+        return "event/update-form"; // 수정하는 폼은
+    }
+
+    @PostMapping("/event/{id}/edit")
+    public String updateEventSubmit(@CurrentUser Account account, @PathVariable String path, @PathVariable Long id, @Valid EventForm eventForm, Errors errors, Model model){
+        Study study = studyService.getStudyToUpdate(account, path);
+        Event event = eventRepository.findById(id).orElseThrow();
+
+        // 뷰에서 모집 방법을 설정하지 못하게 설정했지만, 악의적으로 요청을 보낼 수도 있기 때문에 이에대한 처리를 해줘야함!
+        eventForm.setEventType(event.getEventType());
+
+        // 그리고 추가적인 Validator 설정을 통해서 수정시에 필요한 검증을 별도로 해준다.
+        eventValidator.validateUpdateForm(eventForm,event,errors);
+
+        if(errors.hasErrors()){
+            model.addAttribute(account);
+            model.addAttribute(study);
+            model.addAttribute(event);
+            return "event/update-form";
+        }
+
+        eventService.updateEvent(event,eventForm);
+
+        // 모임을 수정하고나면 해당 모임으로 리다이랙트를 시켜준다.
+        return "redirect:/study/" + study.getEncodedPath(path) + "/event/" + event.getId();
     }
 }

@@ -1,5 +1,6 @@
 package com.jinstudy.event.validator;
 
+import com.jinstudy.domain.Event;
 import com.jinstudy.event.form.EventForm;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -44,7 +45,17 @@ public class EventValidator implements Validator {
     private boolean isNotValidEndDateTime(EventForm eventForm) {
         return eventForm.getEndDateTime().isBefore(eventForm.getStartDateTime());
     }
+    // 코드를 읽었을때 적절한 이름의 메소드로 리팩토링을 해놓으면, 다음에 코드를 읽을때 이해하는데 있어서 수월하다.
+    // 메서드를 읽고 대략적으로 어떤 기능을 하는지 보고, 실제 내용은 메서드의 구현부를 보면된다.
+
+    public void validateUpdateForm(EventForm eventForm, Event event, Errors errors) {
+        if(eventForm.getLimitOfEnrollment() < event.getAcceptedEnrollments()){
+            errors.rejectValue("limitOfEnrollment","wrong.value","확인된 참가 신청보다 모집 인원 수가 커야 합니다.");
+        }
+    }
 }
-// 코드를 읽었을때 적절한 이름의 메소드로 리팩토링을 해놓으면, 다음에 코드를 읽을때 이해하는데 있어서 수월하다.
-// 메서드를 읽고 대략적으로 어떤 기능을 하는지 보고, 실제 내용은 메서드의 구현부를 보면된다.
+
+
+
+
 
