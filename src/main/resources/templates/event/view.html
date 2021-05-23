@@ -67,7 +67,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
-                            <form th:action="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/leave'}" method="post">
+                            <form th:action="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/disenroll'}" method="post">
                                 <button class="btn btn-primary" type="submit" aria-describedby="submitHelp">확인</button>
                             </form>
                         </div>
@@ -78,7 +78,7 @@
 
 
         <div class="row px-3 justify-content-center">
-            <div class="col-7" pt-3>
+            <div class="col-7 pt-3" >
                 <dt class="font-weight-light">상세 모임 설명</dt>
                 <dd th:utext="${event.description}"></dd>
                 <dt class="font-weight-light">모임 참가 신청 (<span th:text="${event.enrollments.size()}"></span>)</dt>
@@ -119,9 +119,9 @@
                                 <span th:if="${!enroll.accepted}">대기중</span>
                             </td>
                             <td th:if="${study.isManager(#authentication.principal)}">
-                                <a th:if="${event.isAcceptable(enroll)}" href="#" class="text-decoration-none"
+                                <a th:if="${event.canAccept(enroll)}" href="#" class="text-decoration-none"
                                    th:href="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/enrollments/' + ${enroll.id} + '/accept'}" >신청 수락</a>
-                                <a th:if="${event.isRejectable(enroll)}" href="#" class="text-decoration-none"
+                                <a th:if="${event.canReject(enroll)}" href="#" class="text-decoration-none"
                                    th:href="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/enrollments/' + ${enroll.id} + '/reject'}">취소</a>
                             </td>
                             <td th:if="${study.isManager(#authentication.principal)}">
@@ -129,7 +129,7 @@
                                    th:href="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/enrollments/' + ${enroll.id} + '/checkin'}">체크인</a>
                                 <a th:if="${enroll.accepted && enroll.attended}" href="#" class="text-decoration-none"
                                    th:href="@{'/study/' + ${study.path} + '/event/' + ${event.id} + '/enrollments/' + ${enroll.id} + '/cancel-checkin'}">체크인 취소</a>
-                            </td>
+                            </td>f
                         </tr>
                         </tbody>
                     </table>

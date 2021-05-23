@@ -23,17 +23,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @AutoConfigureMockMvc
 @SpringBootTest
-class StudyControllerTest {
+public class StudyControllerTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired AccountRepository accountRepository;
-    @Autowired StudyRepository studyRepository;
-    @Autowired StudyService studyService;
+    @Autowired protected MockMvc mockMvc;
+    @Autowired protected AccountRepository accountRepository;
+    @Autowired protected StudyRepository studyRepository;
+    @Autowired protected StudyService studyService;
 
-    @AfterEach
-    void afterEach(){
-        accountRepository.deleteAll();
-    }
+//    @AfterEach
+//    void afterEach(){
+//        accountRepository.deleteAll();
+//    }
 
     @WithAccount("jjinse")
     @DisplayName("스터디 개설 폼 조회")
@@ -112,5 +112,51 @@ class StudyControllerTest {
                 .andExpect(view().name("study/view"))
                 .andExpect(model().attributeExists("account"))
                 .andExpect(model().attributeExists("study"));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("스터디 가입")
+    @Test
+    void joinStudy() throws Exception {
+        Account sejin = createAccount("sejin");
+
+        Study study = createStudy("test-study",sejin);
+
+        mockMvc.perform(get("/study/"+study.getPath()+"/join"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/study/"+study.getPath()+"/members"));
+
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        assertTrue(study.getMembers().contains(jjinse));
+    }
+
+    @WithAccount("jjinse")
+    @DisplayName("스터디 탈퇴")
+    @Test
+    void leaveStudy() throws Exception {
+        Account sejin = createAccount("sejin");
+        Study study = createStudy("test-study",sejin);
+
+        Account jjinse = accountRepository.findByNickname("jjinse");
+        study.addMember(jjinse);
+
+        mockMvc.perform(get("/study/"+study.getPath()+"/leave"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/study/"+study.getPath()+"/members"));
+
+        assertFalse(study.getMembers().contains("jjinse"));
+    }
+
+     protected Study createStudy(String path, Account account) {
+        Study study = new Study();
+        study.setPath(path);
+        return studyService.createNewStudy(account,study);
+    }
+
+    protected Account createAccount(String name) {
+        Account sejin = new Account();
+        sejin.setNickname(name);
+        sejin.setEmail(name + "@email.com");
+        return accountRepository.save(sejin);
     }
 }

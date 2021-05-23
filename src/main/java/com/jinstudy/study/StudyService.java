@@ -174,4 +174,12 @@ public class StudyService {
     public void removeMember(Study study, Account account) {
         study.removeMember(account); // 이는 해당 스터디와 사용자의 member 관계를 끊는 것이다.
     }
+
+    public Study getStudyToEnroll(String path) {
+
+        // EntityGraph를 사용하지 않았음. 그렇기 때문에 ToMany로 끝나는 부분에 대해서  FETCH 타입은 LAZY로 가져오게 된다. -> 즉, 필요할때 들고오게 된다.
+        Study study = studyRepository.findStudyOnlyByPath(path);
+        checkIfExistingStudy(path,study);
+        return study;
+    }
 }

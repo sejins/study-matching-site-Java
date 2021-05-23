@@ -2,6 +2,7 @@ package com.jinstudy.event;
 
 import com.jinstudy.account.CurrentUser;
 import com.jinstudy.domain.Account;
+import com.jinstudy.domain.Enrollment;
 import com.jinstudy.domain.Event;
 import com.jinstudy.domain.Study;
 import com.jinstudy.event.form.EventForm;
@@ -137,4 +138,51 @@ public class EventController {
         return "redirect:/study/" + study.getEncodedPath(path) + "/events";
     }
 
+    @PostMapping("/event/{id}/enroll")
+    public String newEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable Long id){
+        // 관리자가 아닌 사람들도 모임 신청을 사용할 수 있어야한다.
+        Study study = studyService.getStudyToEnroll(path);
+        eventService.newEnrollment(eventRepository.findById(id).orElseThrow(),account); // 새로운 참여를 생성
+        return "redirect:/study/" + study.getEncodedPath(path) + "/event/" + id;
+    }
+
+    @PostMapping("/event/{id}/disenroll")
+    public String cancelEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable Long id){
+        // 관리자가 아닌 사람들도 모임 신청을 취소할 수 있어야한다.
+        Study study = studyService.getStudyToEnroll(path);
+        Event event = eventRepository.findById(id).orElseThrow();
+        eventService.cancelEnrollment(event, account); // 모임 참여를 취소
+        return "redirect:/study/" + study.getEncodedPath(path) + "/event/" + id;
+    }
+
+    @GetMapping("/event/{eventId}/enrollments/{enrollmentId}/accept")
+    public String acceptEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable("eventId") Event event, @PathVariable("enrollmentId") Enrollment enrollment){
+        // 관리자 확정 모임의 경우에 관리자가 사용자에 대해서 확정을 해주는 요청
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        eventService.acceptEnrollment(event,enrollment);
+        return "redirect:/study/"+study.getEncodedPath(path)+"/event/"+event.getId();
+    }
+
+    @GetMapping("/event/{eventId}/enrollments/{enrollmentId}/reject")
+    public String rejectEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable("eventId") Event event, @PathVariable("enrollmentId") Enrollment enrollment){
+        // 관리자 확정 모임의 경우에 관리자가 사용자에 대해서 확정을 취소하는 요청
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        eventService.rejectEnrollment(event,enrollment);
+        return "redirect:/study/"+study.getEncodedPath(path)+"/event/"+event.getId();
+    }
+
+    @GetMapping("/event/{eventId}/enrollments/{enrollmentId}/checkin")
+    public String checkInEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable("eventId") Event event, @PathVariable("enrollmentId") Enrollment enrollment){
+        // 관리자의 체크인
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        eventService.checkInEnrollment(enrollment);
+        return "redirect:/study/"+study.getEncodedPath(path)+"/event/"+event.getId();
+    }
+
+    @GetMapping("/event/{eventId}/enrollments/{enrollmentId}/cancel-checkin")
+    public String cancelCheckInEnrollment(@CurrentUser Account account, @PathVariable String path, @PathVariable("eventId") Event event, @PathVariable("enrollmentId") Enrollment enrollment){
+        Study study = studyService.getStudyToUpdateStatus(account,path);
+        eventService.cancelCheckInEnrollment(enrollment);
+        return "redirect:/study/"+study.getEncodedPath(path)+"/event/"+event.getId();
+    }
 }
