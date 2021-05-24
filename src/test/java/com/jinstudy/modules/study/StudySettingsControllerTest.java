@@ -1,11 +1,16 @@
 package com.jinstudy.modules.study;
 
+import com.jinstudy.infra.MockMvcTest;
+import com.jinstudy.modules.account.AccountFactory;
+import com.jinstudy.modules.account.AccountRepository;
 import com.jinstudy.modules.account.WithAccount;
 import com.jinstudy.modules.account.Account;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,17 +19,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
-@AutoConfigureMockMvc
-@SpringBootTest
-class StudySettingsControllerTest extends StudyControllerTest{
+@MockMvcTest
+class StudySettingsControllerTest{
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private AccountRepository accountRepository;
+    @Autowired private StudyRepository studyRepository;
+    @Autowired private StudyService studyService;
+    @Autowired private StudyFactory studyFactory;
+    @Autowired private AccountFactory accountFactory;
 
     @WithAccount("jjinse")
     @DisplayName("스터디 수정 폼 조회 실패 - 권한 없는 유저의 접근")
     @Test
     void updateDescriptionForm_fail() throws Exception {
-        Account sejin = createAccount("sejin");
-        Study study = createStudy("test-study",sejin);
+        Account sejin = accountFactory.createAccount("sejin");
+        Study study = studyFactory.createStudy("test-study",sejin);
 
         mockMvc.perform(get("/study/"+study.getPath()+"/settings/description"))
                 .andExpect(status().isForbidden());
@@ -35,7 +45,7 @@ class StudySettingsControllerTest extends StudyControllerTest{
     @Test
     void updateDescriptionForm_success() throws Exception {
         Account jjinse = accountRepository.findByNickname("jjinse");
-        Study study = createStudy("test-study",jjinse);
+        Study study = studyFactory.createStudy("test-study",jjinse);
 
         mockMvc.perform(get("/study/"+study.getPath()+"/settings/description"))
                 .andExpect(view().name("study/settings/description"))
@@ -49,7 +59,7 @@ class StudySettingsControllerTest extends StudyControllerTest{
     @Test
     void updateDescription_success() throws Exception {
         Account jjinse = accountRepository.findByNickname("jjinse");
-        Study study = createStudy("test-study",jjinse);
+        Study study = studyFactory.createStudy("test-study",jjinse);
 
         String settingsDescriptionUrl = "/study/"+study.getPath()+"/settings/description";
 
@@ -70,7 +80,7 @@ class StudySettingsControllerTest extends StudyControllerTest{
     @Test
     void updateDescription_fail() throws Exception {
         Account jjinse = accountRepository.findByNickname("jjinse");
-        Study study = createStudy("test-study",jjinse);
+        Study study = studyFactory.createStudy("test-study",jjinse);
         String settingsDescriptionUrl = "/study/"+study.getPath()+"/settings/description";
 
         mockMvc.perform(post(settingsDescriptionUrl)

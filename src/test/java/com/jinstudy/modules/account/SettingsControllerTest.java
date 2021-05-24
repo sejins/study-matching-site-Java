@@ -2,6 +2,7 @@ package com.jinstudy.modules.account;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.jinstudy.infra.MockMvcTest;
 import com.jinstudy.modules.tag.Tag;
 import com.jinstudy.modules.zone.Zone;
 import com.jinstudy.modules.tag.TagForm;
@@ -27,9 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Transactional
-@SpringBootTest
-@AutoConfigureMockMvc
+@MockMvcTest
 class SettingsControllerTest {
     // 프로필 수정 테스트는 인증된 사용자에 대해서만 이루어져야하고 그렇기 때문에, 사용자를 생성하고 인증을 하는 절차가 필요하다!
     // 스프링 시큐리티에서 테스트 코드를 작성할 때 시큐리티 컨텍스트를 설정할 수 있는 기능을 제공한다.

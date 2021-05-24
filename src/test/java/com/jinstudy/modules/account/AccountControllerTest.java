@@ -1,5 +1,6 @@
 package com.jinstudy.modules.account;
 
+import com.jinstudy.infra.MockMvcTest;
 import com.jinstudy.infra.mail.EmailMessage;
 import com.jinstudy.infra.mail.EmailService;
 import org.junit.jupiter.api.DisplayName;
@@ -20,8 +21,7 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@MockMvcTest
 class AccountControllerTest {
 
     @Autowired
