@@ -102,7 +102,7 @@ public class AccountService implements UserDetailsService {
     @Transactional(readOnly = true)   // 읽기 전용 트랜잭션을 지정해줘서 write lock을 사용하지 않아서 성능에 더 유리하다.
     @Override
     public UserDetails loadUserByUsername(String emailOrNickname) throws UsernameNotFoundException {
-        // 데이터 베이스에 있는 정보를 통해서 인증을 하기 위해서 사용 USerDetailsService 인터페이스 구현
+        // 데이터 베이스에 있는 정보를 통해서 인증을 하기 위해서 사용 UserDetailsService 인터페이스 구현
         Account account = accountRepository.findByEmail(emailOrNickname);
         if(account==null){
             account = accountRepository.findByNickname(emailOrNickname);

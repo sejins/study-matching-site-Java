@@ -84,7 +84,7 @@ class AccountControllerTest {
     void signUpSubmit_with_wrong_input() throws Exception {
         mockMvc.perform(post("/sign-up")
             .param("nickname","jjinse")
-            .param("eamil","email...")
+            .param("email","email...")
             .param("password","12345")
             .with(csrf()))   // csrf 토큰을 넣어서 테스트 폼을 만들어야 스프링 시큐리티에 의해서 403 에러가 나지 않는다.
             .andExpect(status().isOk())

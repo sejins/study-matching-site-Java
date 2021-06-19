@@ -35,6 +35,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated();
         // 인증을 허가할 요청을 결정하고, 특정 요청 메서드에 대해서만 허가를 할 수도 있고,
         // 나머지 요청들을 모두 인증을 통해서 접근이 가능하다.
+        // WebSecurityConfigurerAdapter 에서 configure 의 기본설정은 모든 요청에 대해서 인증을 요구하도록 되어있다.
 
         http.formLogin().loginPage("/login").permitAll();
         // form을 통한 로그인을 활성화 하고, 커스텀 로그인 페이지를 띄워줄 핸들러의 url을 지정한다.
@@ -44,7 +45,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.rememberMe()
                 .userDetailsService(userDetailsService)
                 .tokenRepository(tokenRepository());
-
     }
 
     @Bean
