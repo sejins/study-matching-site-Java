@@ -1,11 +1,13 @@
 package com.jinstudy.modules.study;
 
 import com.jinstudy.modules.account.Account;
+import com.jinstudy.modules.study.event.StudyCreatedEvent;
 import com.jinstudy.modules.tag.Tag;
 import com.jinstudy.modules.zone.Zone;
 import com.jinstudy.modules.study.form.StudyDescriptionForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +22,13 @@ public class StudyService {
 
     private final StudyRepository studyRepository;
     private final ModelMapper modelMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public Study createNewStudy(Account account, Study study) {
 
         Study newStudy = studyRepository.save(study);
         newStudy.addManager(account);
+        eventPublisher.publishEvent(new StudyCreatedEvent(newStudy));
         return newStudy;
 
     }
