@@ -22,7 +22,7 @@ public class ZoneService {
 
     @PostConstruct
     public void initZoneData() throws IOException { //TODO main 실행환경에서 작동하는 코드말고 패키징 시 실행가능한 코드로 변경해야하나?? 나중에 배포하고 에러나면 참고
-        if (zoneRepository.count() == 0) {
+        if (zoneRepository.count() == 0) { // Zone 테이블에 지역정보가 없는 경우에 새로 데이터를 넣어준다.
             Resource resource = new ClassPathResource("zonelist_kr.csv");
             List<Zone> zoneList = Files.readAllLines(resource.getFile().toPath(), StandardCharsets.UTF_8).stream()
                     .map(line -> {

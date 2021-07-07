@@ -61,7 +61,7 @@ public class Account { // 계정 도메인
     private boolean studyUpdatedByWeb = true;
 
     @ManyToMany
-    private Set<Tag> tags = new HashSet<>(); // 다대다 관계로 Account에서만 Tag를 참조하는 단방항 방식
+    private Set<Tag> tags = new HashSet<>(); //다대다 관계로 Account에서만 Tag를 참조하는 단방항 방식
 
     @ManyToMany
     private Set<Zone> zones = new HashSet<>();

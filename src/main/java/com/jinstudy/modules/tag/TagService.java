@@ -16,7 +16,7 @@ public class TagService {
         if(tag == null){
             tag = tagRepository.save(Tag.builder().title(tagTitle).build());
         }
-        // tag가 없으면 DE에 새로 만들어서 account와 관계를 맺고, 이미 존재하면 존재하는 객체로 account와 관계를 맺는다.
+        // tag가 없으면 DB에 새로 만들어서 account와 관계를 맺고, 이미 존재하면 존재하는 객체로 account와 관계를 맺는다.
 
         return tag;
     }

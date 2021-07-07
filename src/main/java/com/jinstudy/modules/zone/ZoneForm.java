@@ -13,9 +13,9 @@ public class ZoneForm {
 
     public String getProvinceName(){ return zoneName.substring(zoneName.indexOf("/")+1); }
 
-    public Zone getZone(){ // 이건 왜 만든거지??
-        return Zone.builder().city(getCityName())
-                .localNameOfCity(getLocalNameOfCity())
-                .province(getProvinceName()).build();
-    }
+//    public Zone getZone(){ // 이건 왜 만든거지??
+//        return Zone.builder().city(getCityName())
+//                .localNameOfCity(getLocalNameOfCity())
+//                .province(getProvinceName()).build();
+//    }
 }

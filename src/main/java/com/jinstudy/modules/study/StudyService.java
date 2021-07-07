@@ -41,13 +41,11 @@ public class StudyService {
         return study;
     }
 
-    public Study getStudy(String path) {
+    public Study getStudy(String path){
         Study study = studyRepository.findByPath(path);
-
         if(study==null){
             throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
         }
-
         return study;
     }
 
@@ -161,7 +159,16 @@ public class StudyService {
         }
     }
 
-    public Study getStudyToJoinOrRemove(String path) {
+    public Study getStudyToJoin(String path) {
+        Study study = studyRepository.findStudyWithMembersAndManagersByPath(path);
+        if(study==null){
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+
+        return study;
+    }
+
+    public Study getStudyToRemove(String path) {
         Study study = studyRepository.findStudyWithMembersByPath(path);
         if(study==null){
             throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
@@ -179,7 +186,6 @@ public class StudyService {
     }
 
     public Study getStudyToEnroll(String path) {
-
         // EntityGraph를 사용하지 않았음. 그렇기 때문에 ToMany로 끝나는 부분에 대해서  FETCH 타입은 LAZY로 가져오게 된다. -> 즉, 필요할때 들고오게 된다.
         Study study = studyRepository.findStudyOnlyByPath(path);
         checkIfExistingStudy(path,study);

@@ -57,6 +57,7 @@ public class SettingsController {
     private final ObjectMapper objectMapper;
     private final ZoneRepository zoneRepository;
     private final TagService tagService;
+    private final AccountRepository accountRepository;
 
     @GetMapping(PROFILE)
     public String profileUpdateForm(@CurrentUser Account account, Model model){
@@ -159,7 +160,8 @@ public class SettingsController {
         model.addAttribute("tags",tags.stream().map(Tag::getTitle).collect(Collectors.toList()));
         //tagify 자동완성에 사용될, 모든 태그 정보에 대한 문자열 포맷을 만들어서 뷰에 전달
         List<String> allTags = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
-        model.addAttribute("whitelist", objectMapper.writeValueAsString(allTags));
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allTags)); //tagify에서 whitelist를 사용하기 위해서 List 객체를 JSON의 형태로
+
 
         return SETTINGS + TAGS;
     }
@@ -171,7 +173,7 @@ public class SettingsController {
         // title에 해당하는 태그가 있는지 DB에서 확인하고, 없으면 저장해서 account에 추가를 해주면 된다. -> TagRepository가 필요하당!
         // Optional로 받아오는 코드도 있었는데 이건 나중에 람다 다시 복습하고 이해하던가~
 
-        Tag tag = tagService.findOrCreateNew(title);
+        Tag tag = tagService.findOrCreateNew(title); // 태그 정보를 가져온다.
 
         accountService.addTag(account, tag);
         return ResponseEntity.ok().build(); // AJAX요청에 대한 응답으로, 뷰룰 응답으로 보내는 것이 아니다!
@@ -211,7 +213,7 @@ public class SettingsController {
         Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
 
         if(zone == null){
-            return ResponseEntity.badRequest().build(); // 태그와는 다르게 이때는 없으면 새로운 지역정보를 만들지 않는다.
+            return ResponseEntity.badRequest().build(); //태그와는 다르게 이때는 없으면 새로운 지역정보를 만들지 않는다.
         }
         accountService.addZone(account,zone); // account와 zone 객체 연결
         return ResponseEntity.ok().build();
@@ -229,4 +231,17 @@ public class SettingsController {
         accountService.removeZone(account,zone);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/test") // 영속성 개념 테스트 용 *^^*
+    public String testRequest(@CurrentUser Account account, Model model){
+
+        //System.out.println(account.getTags()); // account는 현재 detached 상태. Lazy Loading 불가능.
+
+        Account persistAccount = accountRepository.findByNickname(account.getNickname());
+
+        //System.out.println(persistAccount.getTags()); // persistAccount는 persist 상태. Lazy Loading을 통해서 tag 정보를 가져온다.
+        model.addAttribute(persistAccount);
+        return "test";
+    }
 }
+

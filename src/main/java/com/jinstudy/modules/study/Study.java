@@ -11,7 +11,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @NamedEntityGraph(name="Study.withAll", attributeNodes = {
         @NamedAttributeNode("tags"),
@@ -28,6 +30,9 @@ import java.util.Set;
         @NamedAttributeNode("managers")})
 @NamedEntityGraph(name="Study.withMembers",attributeNodes = {
         @NamedAttributeNode("members")})
+@NamedEntityGraph(name="Study.withMembersAndManagers", attributeNodes = {
+        @NamedAttributeNode("members"),
+        @NamedAttributeNode("managers")})
 @Entity
 @Getter @Setter @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
@@ -80,9 +85,24 @@ public class Study {
         this.managers.add(account);
     }
 
-    public void addMember(Account account) { this.members.add(account);}
+    public void addMember(Account account) {
+        if(this.published && !this.closed && this.recruiting && !this.managers.contains(account) && !this.members.contains(account)){
+            this.members.add(account);
+        }
+        else {
+            throw new RuntimeException("스터디에 가입할 수 없습니다. 이미 가입한 스터디인지 또는 스터디가 가입 가능한 상태인지 확인하세요.");
+        }
+    }
 
-    public void removeMember(Account account) { this.members.remove(account);}
+    public void removeMember(Account account) {
+        if(!this.closed && this.members.contains(account)){
+            this.members.remove(account);
+        }
+        else{
+            throw new RuntimeException("스터디를 탈퇴할 수 없습니다. 스터디가 이미 종료 되었거나, 스터디에 참여 중이 아닐 수 있습니다.");
+        }
+    }
+
 
     // 타임리프에서 조건을 위해서 사용
     public boolean isJoinable(UserAccount userAccount){
@@ -102,9 +122,12 @@ public class Study {
         return this.managers.contains(account);
     }
 
+    public boolean canPublish() {
+        return !this.closed && !this.published;
+    }
 
     public void publish() {
-        if(!this.closed && !this.published){
+        if(canPublish()){
             this.published = true;
             this.publishedDateTime = LocalDateTime.now();
         }
@@ -113,21 +136,34 @@ public class Study {
         }
     }
 
+    public String getImage(){
+        return image == null ? "/images/default.jpg" : image;
+    }
+
+    public boolean canClose() {
+        return this.published && !this.closed;
+    }
+
     public void close() {
-        if(this.published && !this.closed){
+        if(canClose()){
             this.closed = true;
             this.closedDateTime = LocalDateTime.now();
         }
         else{throw new RuntimeException("스터디를 종료할 수 없습니다. 스터디를 공개하지 않았거나 이미 종료한 스터디 입니다.");} // 여기도 마찬가지!
     }
 
+
     public boolean canUpdateRecruiting() {
         return this.published && this.recruitingUpdateDateTime == null || this.recruitingUpdateDateTime.isBefore(LocalDateTime.now().minusHours(1));
         // 조건문 순서 주의해서 작성해야한다!
     }
 
+    public boolean canStartRecruit() {
+        return !this.closed && this.published && !this.recruiting;
+    }
+
     public void startRecruit() {
-        if(!this.closed && this.published && !this.recruiting){
+        if(canStartRecruit()){
             this.recruiting = true;
             this.recruitingUpdateDateTime = LocalDateTime.now();
         }
@@ -136,8 +172,12 @@ public class Study {
         }
     }
 
+    public boolean canStopRecruit() {
+        return !this.closed && this.published && this.recruiting;
+    }
+
     public void stopRecruit() {
-        if(!this.closed && this.published && this.recruiting){
+        if(canStopRecruit()){
             this.recruiting = false;
             this.recruitingUpdateDateTime = LocalDateTime.now();
         }
@@ -157,5 +197,9 @@ public class Study {
 
     public boolean isManagedBy(Account account) {
        return this.managers.contains(account);
+    }
+
+    public List<String> getManagersName(){
+        return this.managers.stream().map(Account :: getNickname).collect(Collectors.toList());
     }
 }

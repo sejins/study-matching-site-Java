@@ -53,7 +53,7 @@ public class StudySettingsController {
     public String updateStudyInfo(@CurrentUser Account account, Model model, @Valid StudyDescriptionForm studyDescriptionForm, Errors errors,
                                   @PathVariable String path, RedirectAttributes attributes){
 
-        Study study = studyService.getStudy(path);
+        Study study = studyService.getStudyToUpdate(account, path);
         // study 객체는 persist 상태이다. studyService 클래스가 트랜잭션 내부에 있기도 하고, Service 클래스에 @Transactional이 없다고 하더라도 Repository를 통해서 가지고 왔기 때문!
         // 영속성 컨텍스트는 이미 OpenSessionInView 필터에 의해서 해당 post 요청이 실행되기 전에 열려있었다.
         // 그렇기 때문에, 이는 persist 상태이다.
@@ -71,7 +71,7 @@ public class StudySettingsController {
 
     @GetMapping("/banner")
     public String viewStudyBannerForm(@CurrentUser Account account, @PathVariable String path, Model model){
-        Study study = studyService.getStudy(path);
+        Study study = studyService.getStudyToUpdate(account, path);
         model.addAttribute(account);
         model.addAttribute(study);
 
@@ -79,22 +79,24 @@ public class StudySettingsController {
     }
 
     @PostMapping("/banner/enable")
-    public String enableStudyBanner(@CurrentUser Account account, @PathVariable String path){
-        Study study = studyService.getStudy(path);
+    public String enableStudyBanner(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdate(account, path);
         studyService.enableStudyBanner(study);
+        attributes.addFlashAttribute("message","배너 이미지를 사용합니다.");
         return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
     }
 
     @PostMapping("/banner/disable")
-    public String disableStudyBanner(@CurrentUser Account account, @PathVariable String path){
-        Study study = studyService.getStudy(path);
+    public String disableStudyBanner(@CurrentUser Account account, @PathVariable String path, RedirectAttributes attributes){
+        Study study = studyService.getStudyToUpdate(account, path);
         studyService.disableStudyBanner(study);
+        attributes.addFlashAttribute("message","배너 이미지를 사용하지 않습니다.");
         return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
     }
 
     @PostMapping("/banner")
     public String studyImageSubmit(@CurrentUser Account account, @PathVariable String path, Model model, String image, RedirectAttributes attributes){
-        Study study = studyService.getStudy(path);
+        Study study = studyService.getStudyToUpdate(account, path);
         studyService.updateStudyImage(image,study);
         attributes.addFlashAttribute("message","스터디 이미지를 성공적으로 수정했습니다.");
         return "redirect:/study/"+study.getEncodedPath(path)+"/settings/banner";
@@ -179,8 +181,6 @@ public class StudySettingsController {
         return ResponseEntity.ok().build();
     }
 
-
-
     @GetMapping("/study")
     public String StudySettingForm(@CurrentUser Account account, @PathVariable String path, Model model){
         Study study = studyService.getStudyToUpdate(account,path);
@@ -210,7 +210,7 @@ public class StudySettingsController {
         Study study = studyService.getStudyToUpdateStatus(account,path); // 쿼리 개수 조절로 향상 작업
         if(!study.canUpdateRecruiting()){
             attributes.addFlashAttribute("message","1시간 안에 인원 모집 설정을 여러번 변경할 수 없습니다.");
-            return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study"; // 여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
+            return "redirect:/study/"+study.getEncodedPath(path)+"/settings/study"; //여기는 사용자가 발생시키는 에러가 아니라 서버에서 설정하는 서비스상의 제약조건이기 때문에 별도의 에러페이지 사용안함.
             // 단순히 리다이렉트 메세지를 통해서 알려주기만 하면 된다.
         }
         studyService.startRecruit(study);

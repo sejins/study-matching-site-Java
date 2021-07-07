@@ -189,7 +189,7 @@ public class AccountService implements UserDetailsService {
         Optional<Account> byId = accountRepository.findById(account.getId()); //Optional 래퍼 클래스로
         byId.ifPresent(a->a.getTags().add(tag));
         // 여기서 살펴보면 매개변수로 받은 tag랑 tagRepository로 Tag DB에 저장한 객체가 동일하다.
-        // 동일한 객체이기 때문에 JPA와 데이터베이스를 통해서 서로 연동이 되는 것 같음!.
+        // 동일한 객체이기 때문에 JPA와 데이터베이스를 통해서 서로 연동이 되는 것 같음!. -> 도메인 간의 관계를 맺을 수 있는 원리!!
 
     }
 

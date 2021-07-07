@@ -19,7 +19,7 @@ public class Zone {
     @Column(nullable = false)
     private String localNameOfCity;
 
-    @Column(nullable = true)
+    @Column(nullable = true) // 도 정보같은 경우에는 존재하지 않을 수도 있다.
     private String province;
 
     @Override

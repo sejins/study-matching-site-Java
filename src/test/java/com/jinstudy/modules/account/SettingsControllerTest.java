@@ -205,7 +205,7 @@ class SettingsControllerTest {
     }
 
     @WithAccount("jjinse")
-    @DisplayName("계정의 태그 수정 폼")
+    @DisplayName("계정의 태그 수정 페이지")
     @Test
     void updateTagsForm() throws Exception {
         mockMvc.perform(get(ROOT + SETTINGS + TAGS))
@@ -234,7 +234,7 @@ class SettingsControllerTest {
         assertTrue(accountRepository.findByNickname("jjinse").getTags().contains(tag));
         // org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role: com.sejin.domain.Account.tags, could not initialize proxy - no Session
         // accountRepository.findByNickname("jjinse")까지는 트랜잭션이 적용이 되지만, 이 메서드가 호출되고 난 이후에는 트랜잭션이 적용이 되지 않는다.
-        // 그래서 관계에 대한 tags 정보를 찾지 못하는 것이다.
+        // 영속성 컨텍스트가 존재하지 않기 때문에 그래서 관계에 대한 tags 정보를 Lazy Loading 하지 못하는 것이다.
         // 이번 테스트에서는 이러한 일이 많이 발생할 것이기 때문에 테스트 클래스에서 Transactional을 지정해준다.
     }
 
@@ -244,9 +244,9 @@ class SettingsControllerTest {
     void removeTag() throws Exception { // TODO 테스트 코드 수정 필요
         Account jjinse = accountRepository.findByNickname("jjinse");
         Tag newTag = tagRepository.save(Tag.builder().title("newTag").build());
-        accountService.addTag(jjinse,newTag);
+        accountService.addTag(jjinse,newTag); // 일단 먼저 account에 태그 정보를 저장하기
 
-        assertTrue(jjinse.getTags().contains(newTag)); // 일단 먼저 account에 태그 정보를 저장하기
+        assertTrue(jjinse.getTags().contains(newTag));
 
         TagForm tagForm = new TagForm();
         tagForm.setTagTitle("newTag");  // 삭제 AJAX 요청을 보낼 태그 정보를 생성

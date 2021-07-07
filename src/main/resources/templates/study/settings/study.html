@@ -15,13 +15,13 @@
   <div th:replace="fragments.html :: study-menu (studyMenu='settings')"></div>
   <div class="row mt-3 justify-content-center">
       <div class="col-2">
-          <div th:replace="fragments.html :: study-settings-menu (currentMenu='description')"></div>
+          <div th:replace="fragments.html :: study-settings-menu (currentMenu='study')"></div>
       </div>
       <div class="col-8">
           <div th:replace="fragments.html :: message"></div>
           <div class="row">
               <h5 class="col-sm-12">스터디 공개 및 종료</h5>
-              <form th:if="${!study.published && !study.closed}" class="col-sm-12" action="#" th:action="@{'/study/'+${study.path}+'/settings/study/publish'}" method="post" novalidate>
+              <form th:if="${study.canPublish()}" class="col-sm-12" action="#" th:action="@{'/study/'+${study.path}+'/settings/study/publish'}" method="post" novalidate>
                   <div class="alert alert-info" role="alert">
                       스터디를 다른 사용자에게 공개할 준비가 되었다면 버튼을 클릭하세요.<br/>
                       소개, 배너 이미지, 스터디 주제 및 활동 지역을 등록했는지 확인하세요.<br/>
@@ -31,7 +31,7 @@
                       <button class="btn btn-outline-primary" type="submit" aria-describedby="submitHelp">스터디 공개</button>
                   </div>
               </form>
-              <form th:if="${study.published && !study.closed}" class="col-sm-12" action="#" th:action="@{'/study/'+${study.path}+'/settings/study/close'}" method="post" novalidate>
+              <form th:if="${study.canClose()}" class="col-sm-12" action="#" th:action="@{'/study/'+${study.path}+'/settings/study/close'}" method="post" novalidate>
                   <div class="alert alert-warning" role="alert">
                       스터디 활동을 마쳤다면 스터디를 종료하세요.<br/>
                       스터디를 종료하면 더이상 팀원을 모집하거나 모임을 만들 수 없으며, 스터디 경로와 이름을 수정할 수 없습니다.<br/>
@@ -49,7 +49,7 @@
 
           <hr th:if="${!study.closed && study.published}"/>
 
-          <div class="row" th:if="${!study.closed && study.published && !study.recruiting}">
+          <div class="row" th:if="${study.canStartRecruit()}">
               <h5 class="col-sm-12">팀원 모집</h5>
               <form class="col-sm-12" action="#" th:action="@{'/study/' + ${study.getPath()} + '/settings/recruit/start'}" method="post" novalidate>
                   <div class="alert alert-info" role="alert">
@@ -63,7 +63,7 @@
               </form>
           </div>
 
-          <div class="row" th:if="${!study.closed && study.recruiting && study.published}">
+          <div class="row" th:if="${study.canStopRecruit()}">
               <h5 class="col-sm-12">팀원 모집 중단</h5>
               <form class="col-sm-12" action="#" th:action="@{'/study/' + ${study.getPath()} + '/settings/recruit/stop'}" method="post" novalidate>
                   <div class="alert alert-primary" role="alert">
@@ -87,7 +87,7 @@
                   </div>
                   <div class="form-group">
                       <label for="path">스터디 경로</label>
-                      <input type="text" id="path" name="newPath" th:value="${study.path}" class="form-control"
+                      <input type="text" id="path" name="newPath" class="form-control" th:value="${study.path}"
                             placeholder="예) study-path" aria-describedby="pathHelp" required>
                       <small id="pathHelp" class="form-text text-muted">
                           공백없이 문자, 숫자, 대시(-)와 언더바(_)만 3자 이상 20자 이내로 입력하세요. 스터디 홈 주소에 사용합니다. 예) /study/<b>study-path</b>
@@ -106,11 +106,11 @@
               <h5 class="col-sm-12">스터디 이름 수정</h5>
               <form class="col-sm-12 needs-validation" th:action="@{'/study/'+${study.path}+'/settings/study/title'}" method="post" novalidate>
                   <div class="alert alert-warning" role="alert">
-                      스터디의 이름을 수정합니다! <br/>
+                      스터디의 이름을 수정합니다. <br/>
                   </div>
                   <div class="form-group">
-                      <label for="title">스터디 경로</label>
-                      <input type="text" id="title" name="newTitle" th:value="${study.title}" class="form-control"
+                      <label for="title">스터디 이름</label>
+                      <input type="text" id="title" name="newTitle" class="form-control" th:value="${study.title}"
                              placeholder="예) 스터디 이름" aria-describedby="titleHelp" required>
                       <small id="titleHelp" class="form-text text-muted">
                           스터디 이름을 50자 이내로 입력하세요.

@@ -5,6 +5,7 @@ import com.jinstudy.modules.account.Account;
 import com.jinstudy.modules.study.form.StudyForm;
 import com.jinstudy.modules.study.validator.StudyFormValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 
 @RequiredArgsConstructor
 @Controller
+@Slf4j
 public class StudyController {
 
     private final StudyService studyService;
@@ -42,20 +44,26 @@ public class StudyController {
 
     @PostMapping("/new-study")
     public String newStudySubmit(@CurrentUser Account account, @Valid StudyForm studyForm, Errors errors, Model model){
+
+        // studyFormValidator.validate(studyForm, errors); // InitBinder 를 사용하지 않고 이렇게 직접 검증을 할 수도 있다.
+
         if(errors.hasErrors()){
             model.addAttribute(account);
             return "study/form";
         }
-        // 입력받은 스터디 정보로 스터디를 생성하는 로직
+        // 입력받은 스터디 정보로 스터디를 생성
         Study newStudy = studyService.createNewStudy(account, modelMapper.map(studyForm, Study.class));
         return "redirect:/study/"+ URLEncoder.encode(newStudy.getPath(), StandardCharsets.UTF_8);
     }
 
     @GetMapping("/study/{path}")
     public String viewStudy(@CurrentUser Account account, Model model, @PathVariable String path){
-        Study study = studyService.getStudy(path); // path 에 해당하는 스터디 못 찾으면  예외 던지게 해놨음.
+        Study study = studyService.getStudy(path);
         model.addAttribute(account);
         model.addAttribute(study);
+
+        log.info(study.getManagersName().toString());
+
         return "study/view";
     }
 
@@ -69,14 +77,14 @@ public class StudyController {
 
     @GetMapping("/study/{path}/join")
     public String joinStudy(@CurrentUser Account account, @PathVariable String path){
-        Study study = studyService.getStudyToJoinOrRemove(path); // 스터디에 가입하기 위해서 필요한 정보들만 DB에서 쿼리하기 위해
+        Study study = studyService.getStudyToJoin(path); // 스터디 가입에 필요한 쿼리 정보만 가져오기 위해(멤버, 매니저 )
         studyService.addMember(study,account);
         return "redirect:/study/"+ study.getEncodedPath(path) + "/members";
     }
 
     @GetMapping("study/{path}/leave")
     public String leaveStudy(@CurrentUser Account account, @PathVariable String path){
-        Study study = studyService.getStudyToJoinOrRemove(path);
+        Study study = studyService.getStudyToRemove(path); // 스터디 가입에 필요한 쿼리 정보만 가져오기 위해(멤버)
         studyService.removeMember(study,account);
         return "redirect:/study/"+ study.getEncodedPath(path) + "/members";
     }
